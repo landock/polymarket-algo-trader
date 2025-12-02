@@ -1,8 +1,19 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import useClobOrder from "../hooks/useClobOrder";
-import Portal from "./Portal";
+import useClobOrder from "../../../hooks/useClobOrder";
+
+import Portal from "../../Portal";
+import OrderForm from "../../Trading/OrderModal/OrderForm";
+import OrderSummary from "../../Trading/OrderModal/OrderSummary";
+import OrderTypeToggle from "../../Trading/OrderModal/OrderTypeToggle";
+
+import { cn } from "../../../utils/classNames";
+import { SUCCESS_STYLES } from "../../../constants/ui";
+import { convertCentsToPrice } from "../../../utils/order";
+import { MIN_ORDER_SIZE } from "../../../constants/validation";
+import { isValidSize, isValidPriceCents } from "../../../utils/validation";
+
 import type { ClobClient } from "@polymarket/clob-client";
 
 type OrderPlacementModalProps = {
@@ -14,7 +25,7 @@ type OrderPlacementModalProps = {
   tokenId: string;
   negRisk?: boolean;
   clobClient: ClobClient | null;
-  walletAddress: string | undefined;
+  eoaAddress: string | undefined;
 };
 
 export default function OrderPlacementModal({
@@ -26,7 +37,7 @@ export default function OrderPlacementModal({
   tokenId,
   negRisk = false,
   clobClient,
-  walletAddress,
+  eoaAddress,
 }: OrderPlacementModalProps) {
   const [size, setSize] = useState<string>("");
   const [orderType, setOrderType] = useState<"market" | "limit">("market");
@@ -41,7 +52,7 @@ export default function OrderPlacementModal({
     isSubmitting,
     error: orderError,
     orderId,
-  } = useClobOrder(clobClient, walletAddress);
+  } = useClobOrder(clobClient, eoaAddress);
 
   useEffect(() => {
     if (isOpen) {
@@ -88,29 +99,15 @@ export default function OrderPlacementModal({
 
   if (!isOpen) return null;
 
-  const handleSizeChange = (value: string) => {
-    if (value === "" || /^\d*\.?\d*$/.test(value)) {
-      setSize(value);
-      setLocalError(null);
-    }
-  };
-
-  const handleLimitPriceChange = (value: string) => {
-    if (value === "" || /^\d{0,2}$/.test(value)) {
-      setLimitPrice(value);
-      setLocalError(null);
-    }
-  };
-
   const sizeNum = parseFloat(size) || 0;
-  const limitPriceNum = limitPrice ? parseInt(limitPrice) / 100 : 0;
+  const limitPriceNum = limitPrice
+    ? convertCentsToPrice(parseInt(limitPrice))
+    : 0;
   const effectivePrice = orderType === "limit" ? limitPriceNum : currentPrice;
-  const totalCost = sizeNum * effectivePrice;
-  const priceInCents = Math.round(currentPrice * 100);
 
   const handlePlaceOrder = async () => {
-    if (sizeNum <= 0) {
-      setLocalError("Size must be greater than 0");
+    if (!isValidSize(sizeNum)) {
+      setLocalError(`Size must be greater than ${MIN_ORDER_SIZE}`);
       return;
     }
 
@@ -122,7 +119,7 @@ export default function OrderPlacementModal({
 
       const cents = parseInt(limitPrice);
 
-      if (isNaN(cents) || cents < 1 || cents > 99) {
+      if (!isValidPriceCents(cents)) {
         setLocalError("Price must be between 1 and 99 (0.01 to 0.99)");
         return;
       }
@@ -174,7 +171,7 @@ export default function OrderPlacementModal({
 
           {/* Success Message */}
           {showSuccess && (
-            <div className="mb-4 bg-green-500/20 border border-green-500/40 rounded-lg p-3">
+            <div className={cn("mb-4", SUCCESS_STYLES)}>
               <p className="text-green-300 font-medium text-sm">
                 Order placed successfully!
               </p>
@@ -191,104 +188,33 @@ export default function OrderPlacementModal({
           )}
 
           {/* Order Type Toggle */}
-          <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">
-              Order Type
-            </label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setOrderType("market")}
-                className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  orderType === "market"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white/5 text-gray-300 hover:bg-white/10"
-                }`}
-              >
-                Market
-              </button>
-              <button
-                onClick={() => setOrderType("limit")}
-                className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  orderType === "limit"
-                    ? "bg-blue-600 text-white"
-                    : "bg-white/5 text-gray-300 hover:bg-white/10"
-                }`}
-              >
-                Limit
-              </button>
-            </div>
-          </div>
+          <OrderTypeToggle
+            orderType={orderType}
+            onChangeOrderType={(type) => {
+              setOrderType(type);
+              setLocalError(null);
+            }}
+          />
 
-          {/* Current Price */}
-          <div className="mb-4 bg-white/5 rounded-lg p-3">
-            <p className="text-xs text-gray-400 mb-1">Current Market Price</p>
-            <p className="text-lg font-bold">{priceInCents}¢</p>
-          </div>
-
-          {/* Size Input */}
-          <div className="mb-4">
-            <label className="block text-sm text-gray-400 mb-2">
-              Size (shares)
-            </label>
-            <input
-              type="text"
-              value={size}
-              onChange={(e) => handleSizeChange(e.target.value)}
-              placeholder="0"
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          {/* Limit Price Input */}
-          {orderType === "limit" && (
-            <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-2">
-                Limit Price (¢)
-              </label>
-
-              {/* Price input with visual "0." prefix */}
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none select-none">
-                  0.
-                </div>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={limitPrice}
-                  onChange={(e) => handleLimitPriceChange(e.target.value)}
-                  placeholder="50"
-                  maxLength={2}
-                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              <p className="text-xs text-gray-400 mt-1">
-                Enter 1-99 (e.g., 55 = $0.55 or 55¢)
-              </p>
-            </div>
-          )}
+          {/* Order Form */}
+          <OrderForm
+            size={size}
+            onSizeChange={(value) => {
+              setSize(value);
+              setLocalError(null);
+            }}
+            limitPrice={limitPrice}
+            onLimitPriceChange={(value) => {
+              setLimitPrice(value);
+              setLocalError(null);
+            }}
+            orderType={orderType}
+            currentPrice={currentPrice}
+            isSubmitting={isSubmitting}
+          />
 
           {/* Order Summary */}
-          {sizeNum > 0 && (
-            <div className="mb-4 bg-white/5 rounded-lg p-3">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-400">Shares</span>
-                <span className="font-medium">{sizeNum.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-400">Price</span>
-                <span className="font-medium">
-                  ${effectivePrice.toFixed(3)}
-                </span>
-              </div>
-              <div className="flex justify-between font-bold border-t border-white/10 pt-2 mt-2">
-                <span>Total</span>
-                <span>${totalCost.toFixed(2)}</span>
-              </div>
-            </div>
-          )}
+          <OrderSummary size={sizeNum} price={effectivePrice} />
 
           {/* Place Order Button */}
           <button

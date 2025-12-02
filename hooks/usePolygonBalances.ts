@@ -1,22 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createPublicClient, http, formatUnits } from "viem";
 import { polygon } from "viem/chains";
-
-const USDCE_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" as const;
-
-const ERC20_ABI = [
-  {
-    inputs: [{ name: "account", type: "address" }],
-    name: "balanceOf",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-] as const;
+import { USDC_E_CONTRACT_ADDRESS, USDC_E_ERC20ABI } from "@/constants/tokens";
+import { POLYGON_RPC_URL } from "@/constants/polymarket";
 
 const publicClient = createPublicClient({
   chain: polygon,
-  transport: http(process.env.NEXT_PUBLIC_POLYGON_RPC_URL),
+  transport: http(POLYGON_RPC_URL),
 });
 
 export default function usePolygonBalances(walletAddress: string | null) {
@@ -30,8 +20,8 @@ export default function usePolygonBalances(walletAddress: string | null) {
       if (!walletAddress) return null;
 
       return await publicClient.readContract({
-        address: USDCE_ADDRESS,
-        abi: ERC20_ABI,
+        address: USDC_E_CONTRACT_ADDRESS,
+        abi: USDC_E_ERC20ABI,
         functionName: "balanceOf",
         args: [walletAddress as `0x${string}`],
       });

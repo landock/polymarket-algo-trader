@@ -31,7 +31,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(markets);
+    const validMarkets = markets.filter((market: any) => {
+      if (market.events && market.events.length > 0) {
+        const hasEndedEvent = market.events.some(
+          (event: any) =>
+            event.ended === true ||
+            event.live === false ||
+            event.finishedTimestamp
+        );
+        if (hasEndedEvent) return false;
+      }
+
+      if (market.acceptingOrders === false) return false;
+
+      if (!market.clobTokenIds) return false;
+
+      return true;
+    });
+
+    const limitedMarkets = validMarkets.slice(0, parseInt(limit));
+
+    return NextResponse.json(limitedMarkets);
   } catch (error) {
     console.error("Error fetching markets:", error);
     return NextResponse.json(

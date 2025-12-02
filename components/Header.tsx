@@ -1,31 +1,29 @@
 "use client";
 
+import { useWalletContext } from "../providers/WalletProvider";
 import useAddressCopy from "../hooks/useAddressCopy";
 
 interface HeaderProps {
-  pk: string;
-  setPk: (pk: string) => void;
   isConnected: boolean;
-  address: string | undefined;
+  eoaAddress: string | undefined;
   proxyAddress: string | null;
 }
 
 export default function Header({
-  pk,
-  setPk,
   isConnected,
-  address,
+  eoaAddress,
   proxyAddress,
 }: HeaderProps) {
-  const { copied, copyAddress } = useAddressCopy(address ?? null);
+  const { privateKey, setPrivateKey } = useWalletContext();
+  const { copied, copyAddress } = useAddressCopy(eoaAddress ?? null);
   const { copied: copiedProxy, copyAddress: copyProxyAddress } = useAddressCopy(
     proxyAddress ?? null
   );
 
   return (
     <div className="flex flex-col items-center relative z-20">
-      {isConnected && address ? (
-        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20">
+      {isConnected && eoaAddress ? (
+        <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20 flex">
           <div className="flex flex-col gap-3">
             {/* Magic EOA Wallet */}
             <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
@@ -51,7 +49,7 @@ export default function Header({
               >
                 {copied
                   ? "Copied!"
-                  : `${address?.slice(0, 6)}...${address?.slice(-4)}`}
+                  : `${eoaAddress?.slice(0, 6)}...${eoaAddress?.slice(-4)}`}
               </button>
             </div>
 
@@ -83,18 +81,23 @@ export default function Header({
                 </button>
               </div>
             )}
+
+            <div className="text-white/60 text-center">
+              Reload browser to disconnect
+            </div>
           </div>
         </div>
       ) : (
-        <div className="relative flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-6 max-w-2xl">
           {/* Private Key Input */}
           <input
             type="password"
             placeholder="Enter your private key"
-            value={pk}
-            onChange={(e) => setPk(e.target.value)}
+            value={privateKey}
+            onChange={(e) => setPrivateKey(e.target.value)}
             className="bg-white/10 backdrop-blur-md rounded-lg px-6 py-3 border border-white/20 focus:border-white/40 focus:outline-none transition-colors font-mono text-sm w-80"
           />
+
           <p className="text-xs text-white/60">
             Need your Polymarket.com Magic Wallet PK?{" "}
             <a
@@ -106,6 +109,37 @@ export default function Header({
               Get it here
             </a>
           </p>
+
+          {/* Info Card */}
+          <div className="bg-white/5 backdrop-blur-md rounded-lg p-5 border border-white/20 w-full">
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <p className="text-xl text-white/90 leading-relaxed">
+                  This flow is intended only for users who have history on{" "}
+                  <a
+                    href="https://polymarket.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-300 hover:text-blue-200 underline"
+                  >
+                    polymarket.com
+                  </a>{" "}
+                  by way of logging in via Magic with their email address or
+                  Google account. These users can export their private key from{" "}
+                  <a
+                    href="https://reveal.magic.link/polymarket"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-300 hover:text-blue-200 underline"
+                  >
+                    reveal.magic.link/polymarket
+                  </a>{" "}
+                  and use this flow to place trades on your app so that it
+                  continues to sync up with their polymarket account.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

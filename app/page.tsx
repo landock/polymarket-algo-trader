@@ -1,48 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import useClobClient from "../hooks/useClobClient";
+import useProxyWallet from "../hooks/useProxyWallet";
+import useWalletFromPK from "../hooks/useWalletFromPK";
+import useTradingSession from "../hooks/useTradingSession";
+import TradingClientProvider from "../providers/TradingClientProvider";
+
 import Header from "../components/Header";
 import PolygonAssets from "../components/PolygonAssets";
-import ClobClientInitializer from "../components/ClobClientInitializer";
-import MarketTabs from "../components/MarketTabs";
-import useWalletFromPK from "../hooks/useWalletFromPK";
-import useProxyWallet from "../hooks/useProxyWallet";
-import type { ClobClient } from "@polymarket/clob-client";
+import TradingSession from "../components/TradingSession";
+import MarketTabs from "../components/Trading/MarketTabs";
+
+import type { Wallet } from "ethers";
 
 export default function Home() {
-  const [pk, setPk] = useState<string>("");
-  const [clobClient, setClobClient] = useState<ClobClient | null>(null);
+  const { wallet, isConnected, eoaAddress } = useWalletFromPK();
+  const { proxyAddress } = useProxyWallet(eoaAddress);
 
-  const { wallet, isConnected, address } = useWalletFromPK(pk);
-  const proxyAddress = useProxyWallet(address as `0x${string}`);
+  const {
+    tradingSession,
+    currentStep,
+    sessionError,
+    isTradingSessionComplete,
+    initializeTradingSession,
+    endTradingSession,
+    relayClient,
+  } = useTradingSession();
+
+  const { clobClient } = useClobClient(
+    wallet,
+    tradingSession,
+    isTradingSessionComplete
+  );
 
   return (
     <div className="p-6 min-h-screen flex flex-col gap-6 max-w-7xl mx-auto">
       <Header
-        pk={pk}
-        setPk={setPk}
         isConnected={isConnected}
-        address={address}
+        eoaAddress={eoaAddress}
         proxyAddress={proxyAddress}
       />
 
-      {isConnected && address && proxyAddress && (
+      {isConnected && eoaAddress && proxyAddress && (
         <>
-          <ClobClientInitializer
-            wallet={wallet}
-            address={address}
-            proxyAddress={proxyAddress}
-            onClientReady={setClobClient}
+          <TradingSession
+            session={tradingSession}
+            currentStep={currentStep}
+            error={sessionError}
+            isComplete={isTradingSessionComplete}
+            initialize={initializeTradingSession}
+            endSession={endTradingSession}
           />
 
           <PolygonAssets proxyAddress={proxyAddress} />
 
-          {clobClient && (
-            <MarketTabs
+          {isTradingSessionComplete && (
+            <TradingClientProvider
               clobClient={clobClient}
-              walletAddress={address}
+              eoaAddress={eoaAddress}
               proxyAddress={proxyAddress}
-            />
+              relayClient={relayClient}
+            >
+              <MarketTabs wallet={wallet as Wallet} />
+            </TradingClientProvider>
           )}
         </>
       )}

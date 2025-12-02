@@ -1,73 +1,57 @@
-import { useState, useCallback, useEffect } from "react";
+import { useMemo } from "react";
+import { TradingSession } from "../utils/session";
 import { ClobClient } from "@polymarket/clob-client";
+import { BuilderConfig } from "@polymarket/builder-signing-sdk";
+
+import {
+  CLOB_API_URL,
+  POLYGON_CHAIN_ID,
+  REMOTE_SIGNING_URL,
+} from "../constants/polymarket";
 import type { Wallet } from "ethers";
 
-const CLOB_API_URL = "https://clob.polymarket.com";
-const POLYGON_CHAIN_ID = 137;
+// This hook creates the authenticated clobClient with the User API Credentials
+// but only after a trading session is initialized
 
 export default function useClobClient(
   wallet: Wallet | null,
-  address: string | undefined,
-  proxyAddress: string | null
+  tradingSession: TradingSession | null,
+  isTradingSessionComplete: boolean | undefined
 ) {
-  const [clobClient, setClobClient] = useState<ClobClient | null>(null);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    if (!wallet || !address) {
-      setClobClient(null);
-      setError(null);
+  const clobClient = useMemo(() => {
+    if (
+      !wallet ||
+      !isTradingSessionComplete ||
+      !tradingSession?.apiCredentials ||
+      !tradingSession?.proxyAddress
+    ) {
+      return null;
     }
-  }, [wallet, address]);
-
-  const createClobSession = useCallback(async () => {
-    if (!wallet || !address || !proxyAddress) {
-      throw new Error("Wallet not connected or proxy address missing");
-    }
-
-    setIsInitializing(true);
-    setError(null);
 
     try {
-      const tempClient = new ClobClient(CLOB_API_URL, POLYGON_CHAIN_ID, wallet);
-
-      const creds = await tempClient.createOrDeriveApiKey();
-
-      // Magic Email/Google login user signature type is 1
-      // https://docs.polymarket.com/developers/CLOB/clients
-      const signatureType = 1;
-
-      const client = new ClobClient(
+      const builderConfig = new BuilderConfig({
+        remoteBuilderConfig: {
+          url: REMOTE_SIGNING_URL(),
+        },
+      });
+      // This is the persisted clobClient instance for creating and posting
+      // orders for the user
+      return new ClobClient(
         CLOB_API_URL,
         POLYGON_CHAIN_ID,
         wallet,
-        creds,
-        signatureType,
-        proxyAddress
+        tradingSession.apiCredentials,
+        1, // signatureType = 1 for Magic wallets
+        tradingSession.proxyAddress,
+        undefined,
+        false,
+        builderConfig
       );
-
-      setClobClient(client);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error");
-      setError(error);
-      throw error;
-    } finally {
-      setIsInitializing(false);
+    } catch (error) {
+      console.error("Failed to initialize CLOB client:", error);
+      return null;
     }
-  }, [wallet, address, proxyAddress]);
+  }, [wallet, isTradingSessionComplete, tradingSession]);
 
-  const clearSession = useCallback(() => {
-    setClobClient(null);
-    setError(null);
-  }, []);
-
-  return {
-    clobClient,
-    hasSession: !!clobClient,
-    isInitializing,
-    error,
-    createClobSession,
-    clearSession,
-  };
+  return { clobClient };
 }
