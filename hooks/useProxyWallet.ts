@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useCallback } from "react";
-import { providers } from "ethers";
+import { useWallet } from "@/providers/WalletProvider";
 import { getAddress, keccak256, concat, type Address, type Hex } from "viem";
 
 import {
@@ -8,7 +8,6 @@ import {
   IMPLEMENTATION,
   PROXY_BYTECODE_TEMPLATE,
 } from "../constants/proxyWallet";
-import { POLYGON_RPC_URL } from "@/constants/polymarket";
 
 /*
   This hook derives the proxy wallet from the wallet address of the user
@@ -20,6 +19,8 @@ import { POLYGON_RPC_URL } from "@/constants/polymarket";
 */
 
 export default function useProxyWallet(eoaAddress: string | undefined) {
+  const { publicClient } = useWallet();
+
   const proxyAddress = useMemo(() => {
     if (!eoaAddress) return null;
 
@@ -46,14 +47,15 @@ export default function useProxyWallet(eoaAddress: string | undefined) {
     if (!proxyAddress) return false;
 
     try {
-      const provider = new providers.JsonRpcProvider(POLYGON_RPC_URL);
-      const code = await provider.getCode(proxyAddress);
-      return code !== "0x" && code.length > 2;
+      const code = await publicClient.getCode({
+        address: proxyAddress as `0x${string}`,
+      });
+      return code !== undefined && code !== "0x" && code.length > 2;
     } catch (err) {
       console.error("Failed to check proxy deployment:", err);
       return false;
     }
-  }, [proxyAddress]);
+  }, [proxyAddress, publicClient]);
 
   return {
     proxyAddress,

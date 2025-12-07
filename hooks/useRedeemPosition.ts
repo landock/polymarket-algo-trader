@@ -1,28 +1,30 @@
 import { useState, useCallback } from "react";
-import type { Wallet } from "ethers";
+import { RelayClient } from "@polymarket/builder-relayer-client";
 import { createRedeemTx, RedeemParams } from "@/utils/redeem";
-
 
 export default function useRedeemPosition() {
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const redeemPosition = useCallback(
-    async (wallet: Wallet, params: RedeemParams): Promise<boolean> => {
+    async (
+      relayClient: RelayClient,
+      params: RedeemParams
+    ): Promise<boolean> => {
       setIsRedeeming(true);
       setError(null);
 
       try {
         const redeemTx = createRedeemTx(params);
 
-        // Send transaction directly with wallet
-        const tx = await wallet.sendTransaction({
-          to: redeemTx.to,
-          data: redeemTx.data,
-          value: redeemTx.value,
-        });
+        // Use relayClient.execute() for gasless redemption
+        // Polymarket pays the gas fees through the relayer
+        const response = await relayClient.execute(
+          [redeemTx],
+          `Redeem position for condition ${params.conditionId}`
+        );
 
-        await tx.wait();
+        await response.wait();
         return true;
       } catch (err) {
         const error =
@@ -43,4 +45,3 @@ export default function useRedeemPosition() {
     redeemPosition,
   };
 }
-

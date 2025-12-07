@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@polymarket/builder-relayer-client": "^0.0.7",
+    "@polymarket/builder-relayer-client": "^0.0.8",
     "@polymarket/builder-signing-sdk": "^0.0.8",
     "@polymarket/clob-client": "^4.22.8",
     "@tanstack/react-query": "^5.90.10",

@@ -2,8 +2,8 @@
 
 import useClobClient from "../hooks/useClobClient";
 import useProxyWallet from "../hooks/useProxyWallet";
-import useWalletFromPK from "../hooks/useWalletFromPK";
 import useTradingSession from "../hooks/useTradingSession";
+import { useWallet } from "../providers/WalletProvider";
 import TradingClientProvider from "../providers/TradingClientProvider";
 
 import Header from "../components/Header";
@@ -11,10 +11,8 @@ import PolygonAssets from "../components/PolygonAssets";
 import TradingSession from "../components/TradingSession";
 import MarketTabs from "../components/Trading/MarketTabs";
 
-import type { Wallet } from "ethers";
-
 export default function Home() {
-  const { wallet, isConnected, eoaAddress } = useWalletFromPK();
+  const { wallet, isConnected, eoaAddress } = useWallet();
   const { proxyAddress } = useProxyWallet(eoaAddress);
 
   const {
@@ -61,7 +59,7 @@ export default function Home() {
               proxyAddress={proxyAddress}
               relayClient={relayClient}
             >
-              <MarketTabs wallet={wallet as Wallet} />
+              <MarketTabs />
             </TradingClientProvider>
           )}
         </>

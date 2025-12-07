@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(
+    // Try active markets first
+    let response = await fetch(
       `${GAMMA_API}/markets?limit=100&offset=0&active=true&closed=false`,
       {
         headers: { "Content-Type": "application/json" },
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
       throw new Error(`Gamma API error: ${response.status}`);
     }
 
-    const markets = await response.json();
+    let markets = await response.json();
 
     if (!Array.isArray(markets)) {
       console.error("Invalid response structure:", markets);
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const market = markets.find((m) => {
+    let market = markets.find((m) => {
       if (!m.clobTokenIds) return false;
       try {
         const tokenIds = JSON.parse(m.clobTokenIds);
@@ -47,8 +48,30 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // If not found in active markets, search closed markets
     if (!market) {
-      return NextResponse.json({ error: "Market not found" }, { status: 404 });
+      response = await fetch(
+        `${GAMMA_API}/markets?limit=100&offset=0&closed=true`,
+        {
+          headers: { "Content-Type": "application/json" },
+          next: { revalidate: 300 },
+        }
+      );
+
+      if (response.ok) {
+        const closedMarkets = await response.json();
+        if (Array.isArray(closedMarkets)) {
+          market = closedMarkets.find((m) => {
+            if (!m.clobTokenIds) return false;
+            try {
+              const tokenIds = JSON.parse(m.clobTokenIds);
+              return tokenIds.includes(tokenId);
+            } catch {
+              return false;
+            }
+          });
+        }
+      }
     }
 
     return NextResponse.json(market);

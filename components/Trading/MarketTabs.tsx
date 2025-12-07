@@ -8,7 +8,6 @@ import UserPositions from "../../components/Trading/Positions";
 import HighVolumeMarkets from "../../components/Trading/Markets";
 
 import { cn } from "../../utils/classNames";
-import { Wallet } from "ethers";
 
 type TabId = "positions" | "orders" | "markets";
 
@@ -23,7 +22,7 @@ const tabs: Tab[] = [
   { id: "markets", label: "Markets" },
 ];
 
-export default function MarketTabs({ wallet }: { wallet: Wallet }) {
+export default function MarketTabs() {
   const [activeTab, setActiveTab] = useState<TabId>("markets");
 
   return (
@@ -48,7 +47,7 @@ export default function MarketTabs({ wallet }: { wallet: Wallet }) {
 
       {/* Tab Content */}
       <div>
-        {activeTab === "positions" && <UserPositions wallet={wallet} />}
+        {activeTab === "positions" && <UserPositions />}
         {activeTab === "orders" && <ActiveOrders />}
         {activeTab === "markets" && <HighVolumeMarkets />}
       </div>

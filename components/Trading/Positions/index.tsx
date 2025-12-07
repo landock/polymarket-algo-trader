@@ -18,10 +18,10 @@ import PositionFilters from "./PositionFilters";
 import { createPollingInterval } from "../../../utils/polling";
 import { DUST_THRESHOLD } from "../../../constants/validation";
 import { POLLING_DURATION, POLLING_INTERVAL } from "../../../constants/query";
-import { Wallet } from "ethers";
 
-export default function UserPositions({ wallet }: { wallet: Wallet }) {
-  const { clobClient, eoaAddress, proxyAddress } = useTradingClient();
+export default function UserPositions() {
+  const { clobClient, eoaAddress, proxyAddress, relayClient } =
+    useTradingClient();
 
   const {
     data: positions,
@@ -66,7 +66,7 @@ export default function UserPositions({ wallet }: { wallet: Wallet }) {
     try {
       await submitOrder({
         tokenId: position.asset,
-        size: position.size,
+        size: position.size * 0.99,
         side: "SELL",
         negRisk: position.negativeRisk,
         isMarketOrder: true,
@@ -102,14 +102,14 @@ export default function UserPositions({ wallet }: { wallet: Wallet }) {
   };
 
   const handleRedeem = async (position: PolymarketPosition) => {
-    if (!wallet) {
-      alert("Wallet not initialized");
+    if (!relayClient) {
+      alert("Relay client not initialized");
       return;
     }
 
     setRedeemingAsset(position.asset);
     try {
-      await redeemPosition(wallet, {
+      await redeemPosition(relayClient, {
         conditionId: position.conditionId,
         outcomeIndex: position.outcomeIndex,
       });
@@ -194,7 +194,7 @@ export default function UserPositions({ wallet }: { wallet: Wallet }) {
             isPendingVerification={pendingVerification.has(position.asset)}
             isSubmitting={isSubmitting}
             canSell={!!clobClient}
-            canRedeem={!!wallet}
+            canRedeem={!!relayClient}
           />
         ))}
       </div>

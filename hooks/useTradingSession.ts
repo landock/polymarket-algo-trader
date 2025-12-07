@@ -2,8 +2,9 @@ import { useState, useCallback, useEffect } from "react";
 
 import useRelayClient from "./useRelayClient";
 import useProxyWallet from "./useProxyWallet";
-import useWalletFromPK from "./useWalletFromPK";
+import useTokenApprovals from "./useTokenApprovals";
 import useUserApiCredentials from "./useUserApiCredentials";
+import { useWallet } from "@/providers/WalletProvider";
 
 import {
   saveSession,
@@ -23,10 +24,12 @@ export default function useTradingSession() {
     null
   );
 
-  const { wallet, eoaAddress } = useWalletFromPK();
-  const { proxyAddress, isProxyDeployed } = useProxyWallet(eoaAddress);
+  const { wallet, eoaAddress } = useWallet();
+  const { proxyAddress } = useProxyWallet(eoaAddress);
   const { createOrDeriveUserApiCredentials } = useUserApiCredentials();
-  const { relayClient } = useRelayClient(eoaAddress);
+  const { checkAllTokenApprovals, setAllTokenApprovals } = useTokenApprovals();
+  const { relayClient, initializeRelayClient, clearRelayClient } =
+    useRelayClient();
 
   useEffect(() => {
     return () => {
@@ -42,33 +45,43 @@ export default function useTradingSession() {
       throw new Error("Wallet not connected or proxy address missing");
     }
 
-    setCurrentStep("checking");
+    setCurrentStep("idle");
     setSessionError(null);
 
     try {
-      const sternWarning =
-        `There is no Magic Link custom proxy deployed for this EOA: ${eoaAddress}. ` +
-        `This indicates that this user has never logged into, or placed trades on 'polymarket.com' with the same email used to export the private key from 'reveal.magic.link/polymarket.' ` +
-        `This flow should only be reserved for users who have history on 'polymarket.com' by way of logging in with said email address and placing at least one trade.`;
+      // Step 1: Initializes relayClient with the ethers signer and
+      // Builder's credentials (via remote signing server) for authentication
+      const initializedRelayClient = await initializeRelayClient();
 
-      // Step 1: Check if custom proxy wallet is already deployed
-      setCurrentStep("checking");
-      let isDeployed = false;
-      isDeployed = await isProxyDeployed();
-      if (!isDeployed) {
-        throw new Error(sternWarning);
-      }
-
-      // Step 2: Get User API Credentials (derive or create)
-      // and store them in the custom session object
+      // Step 2: Create or derive user API credentials
       setCurrentStep("credentials");
       const apiCreds = await createOrDeriveUserApiCredentials(wallet);
 
-      // Step 3: Create custom session object
+      // Step 3: Checks if all token approvals are set
+      setCurrentStep("approvals");
+      const approvalStatus = await checkAllTokenApprovals(proxyAddress);
+
+      let hasApprovals = false;
+      if (approvalStatus.allApproved) {
+        // If all token approvals are set, assume the proxy wallet is already deployed as well
+        hasApprovals = true;
+      } else {
+        // If not, set all token approvals for the proxy wallet for trading
+        // This action automatically deploys the proxy wallet if it is not already deployed
+        console.log("Deploying proxy wallet with token approvals...");
+        hasApprovals = await setAllTokenApprovals(initializedRelayClient);
+
+        if (!hasApprovals) {
+          throw new Error("Failed to set token approvals");
+        }
+      }
+
+      // Step 4: Creates a custom session object
       const newSession: TradingSession = {
         eoaAddress: eoaAddress,
         proxyAddress: proxyAddress,
         isProxyDeployed: true,
+        hasApprovals: hasApprovals,
         hasApiCredentials: true,
         apiCredentials: apiCreds,
         lastChecked: Date.now(),
@@ -88,7 +101,9 @@ export default function useTradingSession() {
     eoaAddress,
     wallet,
     proxyAddress,
-    isProxyDeployed,
+    initializeRelayClient,
+    checkAllTokenApprovals,
+    setAllTokenApprovals,
     createOrDeriveUserApiCredentials,
   ]);
 
@@ -98,16 +113,19 @@ export default function useTradingSession() {
 
     clearSession(eoaAddress);
     setTradingSession(null);
+    clearRelayClient();
     setCurrentStep("idle");
     setSessionError(null);
-  }, [eoaAddress]);
+  }, [eoaAddress, clearRelayClient]);
 
   return {
     tradingSession,
     currentStep,
     sessionError,
     isTradingSessionComplete:
-      tradingSession?.isProxyDeployed && tradingSession?.hasApiCredentials,
+      tradingSession?.isProxyDeployed &&
+      tradingSession?.hasApiCredentials &&
+      tradingSession?.hasApprovals,
     initializeTradingSession,
     endTradingSession,
     relayClient,

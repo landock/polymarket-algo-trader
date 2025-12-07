@@ -1,8 +1,7 @@
-import { providers } from "ethers";
 import { useState, useCallback } from "react";
-import useWalletFromPK from "./useWalletFromPK";
+import { useWallet } from "@/providers/WalletProvider";
 import { BuilderConfig } from "@polymarket/builder-signing-sdk";
-import { RelayClient } from "@polymarket/builder-relayer-client";
+import { RelayClient, RelayerTxType } from "@polymarket/builder-relayer-client";
 
 import {
   RELAYER_URL,
@@ -13,9 +12,9 @@ import {
 // This hook is responsible for creating and managing the relay client instance
 // The user's signer and builder config are used to initialize the relay client
 
-export default function useRelayClient(eoaAddress?: string) {
+export default function useRelayClient() {
   const [relayClient, setRelayClient] = useState<RelayClient | null>(null);
-  const { wallet } = useWalletFromPK();
+  const { wallet, eoaAddress } = useWallet();
 
   // This function initializes the relay client with
   // the user's signer and builder config
@@ -25,9 +24,6 @@ export default function useRelayClient(eoaAddress?: string) {
     }
 
     try {
-      const provider = new providers.Web3Provider(wallet as any);
-      const signer = provider.getSigner();
-
       // Builder config is obtained from 'polymarket.com/settings?tab=builder'
       // A remote signing server is used to enable remote signing for builder authentication
       // This allows the builder credentials to be kept secure while signing requests
@@ -38,15 +34,16 @@ export default function useRelayClient(eoaAddress?: string) {
         },
       });
 
-      // The relayClient instance is used for deploying the Safe,
-      // setting token approvals, and executing CTF operations such
-      // as splitting, merging, and redeeming positions.
+      // The relayClient instance is used for setting token approvals
+      // and executing CTF operations such as splitting, merging, and
+      // redeeming positions. Uses PROXY wallet type for Magic Link users.
 
       const client = new RelayClient(
         RELAYER_URL,
         POLYGON_CHAIN_ID,
-        signer,
-        builderConfig
+        wallet,
+        builderConfig,
+        RelayerTxType.PROXY
       );
 
       setRelayClient(client);

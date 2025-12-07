@@ -42,23 +42,45 @@ export default function useClobOrder(
           let aggressivePrice: number;
 
           try {
+            // Get opposite side's price for aggressive execution
+            const oppositeSide = params.side === "BUY" ? Side.SELL : Side.BUY;
+
+            console.log(
+              `Getting price for token ${params.tokenId}, side: ${oppositeSide}`
+            );
+
             const priceFromOrderbook = await clobClient.getPrice(
               params.tokenId,
-              side
+              oppositeSide
             );
+
+            console.log("Price response:", priceFromOrderbook);
 
             const marketPrice = parseFloat(priceFromOrderbook.price);
 
+            console.log(`Market price: ${marketPrice}`);
+
             if (isNaN(marketPrice) || marketPrice <= 0 || marketPrice >= 1) {
-              throw new Error("Invalid price from orderbook");
+              throw new Error(`Invalid price from orderbook: ${marketPrice}`);
             }
 
             if (params.side === "BUY") {
               aggressivePrice = Math.min(0.99, marketPrice * 1.05);
             } else {
-              aggressivePrice = Math.max(0.01, marketPrice * 0.95);
+              aggressivePrice = Math.max(0.0001, marketPrice * 0.90);
             }
+            
+            console.log(
+              `Using aggressive price: ${aggressivePrice} for ${params.side}`
+            );
           } catch (e) {
+            console.error(
+              "Failed to get market price for token:",
+              params.tokenId
+            );
+            console.error("Side:", params.side);
+            console.error("Full error:", e);
+
             aggressivePrice = params.side === "BUY" ? 0.99 : 0.01;
             console.warn(
               `Cannot get market price, using fallback: ${aggressivePrice}. Error:`,

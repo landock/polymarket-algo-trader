@@ -1,15 +1,11 @@
+import { formatUnits } from "viem";
 import { useQuery } from "@tanstack/react-query";
-import { createPublicClient, http, formatUnits } from "viem";
-import { polygon } from "viem/chains";
+import { useWallet } from "@/providers/WalletProvider";
 import { USDC_E_CONTRACT_ADDRESS, USDC_E_ERC20ABI } from "@/constants/tokens";
-import { POLYGON_RPC_URL } from "@/constants/polymarket";
-
-const publicClient = createPublicClient({
-  chain: polygon,
-  transport: http(POLYGON_RPC_URL),
-});
 
 export default function usePolygonBalances(walletAddress: string | null) {
+  const { publicClient } = useWallet();
+
   const {
     data: usdcBalance,
     isLoading,

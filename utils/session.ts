@@ -3,6 +3,7 @@ export interface TradingSession {
   proxyAddress: string;
   isProxyDeployed: boolean;
   hasApiCredentials: boolean;
+  hasApprovals: boolean;
   apiCredentials?: {
     key: string;
     secret: string;
@@ -11,7 +12,12 @@ export interface TradingSession {
   lastChecked: number;
 }
 
-export type SessionStep = "idle" | "checking" | "credentials" | "complete";
+export type SessionStep =
+  | "idle"
+  | "checking"
+  | "credentials"
+  | "approvals"
+  | "complete";
 
 export const saveSession = (address: string, session: TradingSession): void => {
   localStorage.setItem(

@@ -1,7 +1,10 @@
 "use client";
 
-import { useWalletContext } from "../providers/WalletProvider";
+import { useState, useEffect } from "react";
 import useAddressCopy from "../hooks/useAddressCopy";
+import useProxyWallet from "../hooks/useProxyWallet";
+import { useWallet } from "../providers/WalletProvider";
+import { POLYMARKET_PROFILE_URL } from "../constants/polymarket";
 
 interface HeaderProps {
   isConnected: boolean;
@@ -14,11 +17,22 @@ export default function Header({
   eoaAddress,
   proxyAddress,
 }: HeaderProps) {
-  const { privateKey, setPrivateKey } = useWalletContext();
+  const { privateKey, setPrivateKey } = useWallet();
   const { copied, copyAddress } = useAddressCopy(eoaAddress ?? null);
   const { copied: copiedProxy, copyAddress: copyProxyAddress } = useAddressCopy(
     proxyAddress ?? null
   );
+
+  const { isProxyDeployed } = useProxyWallet(eoaAddress);
+  const [proxyIsDeployed, setProxyIsDeployed] = useState(false);
+
+  useEffect(() => {
+    if (!proxyAddress) return;
+
+    isProxyDeployed().then((deployed) => {
+      setProxyIsDeployed(deployed);
+    });
+  }, [proxyAddress, isProxyDeployed]);
 
   return (
     <div className="flex flex-col items-center relative z-20">
@@ -82,7 +96,29 @@ export default function Header({
               </div>
             )}
 
-            <div className="text-white/60 text-center">
+            {/* Polymarket Profile Button */}
+            {proxyAddress && (
+              <div className="flex items-center justify-center pt-2 border-t border-white/10">
+                <div className="relative group">
+                  <a
+                    href={POLYMARKET_PROFILE_URL(proxyAddress)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-lg px-6 py-2 transition-all select-none cursor-pointer font-medium text-purple-300 hover:text-purple-200 text-center inline-flex items-center gap-2"
+                  >
+                    View Polymarket Profile
+                    <span className="text-xs">↗</span>
+                  </a>
+                  {!proxyIsDeployed && (
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-lg border border-yellow-500/20 z-50 text-center">
+                      Your proxy wallet will be deployed after your first trade
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="text-white/60 text-center text-sm">
               Reload browser to disconnect
             </div>
           </div>
@@ -115,17 +151,17 @@ export default function Header({
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <p className="text-xl text-white/90 leading-relaxed">
-                  This flow is intended only for users who have history on{" "}
+                  This flow is intended only for users who have a{"  "}
                   <a
                     href="https://polymarket.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-300 hover:text-blue-200 underline"
                   >
-                    polymarket.com
+                    Polymarket.com
                   </a>{" "}
-                  by way of logging in via Magic with their email address or
-                  Google account. These users can export their private key from{" "}
+                  account via Magic Link (email/Google) login. These users can
+                  export their private key from{" "}
                   <a
                     href="https://reveal.magic.link/polymarket"
                     target="_blank"
@@ -134,8 +170,8 @@ export default function Header({
                   >
                     reveal.magic.link/polymarket
                   </a>{" "}
-                  and use this flow to place trades on your app so that it
-                  continues to sync up with their polymarket account.
+                  and onboard to your app so it continues to sync up with their
+                  Polymarket account.
                 </p>
               </div>
             </div>
