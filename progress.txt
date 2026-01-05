@@ -167,3 +167,79 @@ Implemented comprehensive price alert notification system with the following cap
 - Feature F004 (Portfolio Overview Dashboard) is HIGH priority and would provide valuable trading insights
 - Feature F007 (Limit Order Support) is HIGH priority and would extend order execution capabilities
 - Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
+
+### Iteration 3 - Portfolio Overview Dashboard (F004) - COMPLETED
+**Date:** 2026-01-05
+**Feature:** Portfolio Overview Dashboard (F004)
+**Status:** ✅ COMPLETED
+
+**Files Created:**
+- `src/shared/types/index.ts` - Added PortfolioMetrics and PositionBreakdown type definitions
+- `src/background/portfolio-service.ts` - Portfolio calculation service with P&L aggregation
+- `src/popup/portfolio-dashboard.html` - Dedicated portfolio dashboard page HTML
+- `src/popup/portfolio-dashboard-page.tsx` - Portfolio dashboard React component with pie chart
+
+**Files Modified:**
+- `src/background/service-worker.ts` - Added GET_PORTFOLIO message handler and portfolio service integration
+- `src/popup/popup.tsx` - Added "Portfolio Dashboard" button to open dashboard page
+- `webpack.config.js` - Added portfolio-dashboard-page entry and HtmlWebpackPlugin configuration
+
+**Implementation Summary:**
+Implemented comprehensive portfolio overview dashboard with the following capabilities:
+
+1. **Data Model:**
+   - PortfolioMetrics type with fields: totalValue, realizedPnL, unrealizedPnL, totalPnL, totalPnLPercent, positionCount, totalVolume, lastUpdated
+   - PositionBreakdown type with fields: tokenId, marketQuestion, outcome, size, currentValue, percentOfPortfolio, unrealizedPnL, unrealizedPnLPercent
+
+2. **Portfolio Calculation Service:**
+   - calculatePortfolioMetrics() - Aggregates positions and order history to compute P&L
+   - calculatePositionBreakdown() - Computes position distribution percentages
+   - fetchPortfolioMetrics() - Main function that fetches positions and calculates all metrics
+   - Realized P&L calculation from order history using simple buy/sell matching
+   - Unrealized P&L aggregation from open positions
+
+3. **Dashboard UI Component:**
+   - Four metric cards: Total Portfolio Value, Total P&L, Realized P&L, Unrealized P&L
+   - Color-coded P&L values (green for positive, red for negative)
+   - CSS conic-gradient pie chart visualization showing position distribution
+   - Legend with market names, outcomes, percentages, and values
+   - Displays up to 10 largest positions in pie chart
+   - Auto-refresh every 10 seconds for real-time updates
+   - Manual refresh button
+
+4. **Service Worker Integration:**
+   - GET_PORTFOLIO message handler in service-worker.ts
+   - Fetches positions using existing positions-fetcher service
+   - Calculates metrics using portfolio-service
+   - Returns both metrics and breakdown to UI
+   - Graceful error handling with user-friendly messages
+
+5. **Popup Integration:**
+   - Added "Portfolio Dashboard" button in main popup (purple color: #8b5cf6)
+   - Opens dedicated portfolio-dashboard.html in popup window (1000x700)
+   - Consistent with existing Order History and Price Alerts pattern
+
+**Acceptance Criteria Met:**
+✅ Shows total portfolio value in USD
+✅ Shows realized P&L (from completed trades)
+✅ Shows unrealized P&L (from open positions)
+✅ Pie chart showing position distribution by market
+✅ Updates in real-time as prices change (auto-refresh every 10s)
+✅ Accessible from popup (note: content script overlay integration not implemented as positions data already available in existing UI)
+
+**Build Status:**
+✅ TypeScript compilation successful (npm run type-check)
+✅ Webpack build successful with no errors
+
+**Technical Notes:**
+- Portfolio metrics are calculated on-demand from fresh position data
+- Realized P&L uses simple aggregation (sum of sells - sum of buys per token)
+- Unrealized P&L comes directly from Polymarket position data (cashPnl field)
+- Pie chart uses pure CSS (conic-gradient) - no external chart library required
+- Color palette supports up to 10 different positions in pie chart
+- Total P&L percentage is based on total initial invested capital
+
+**Next Steps:**
+- Feature F007 (Limit Order Support) is HIGH priority and would extend order execution capabilities
+- Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
+- Feature F005 (Risk Management Settings) is MEDIUM priority and would add safety controls

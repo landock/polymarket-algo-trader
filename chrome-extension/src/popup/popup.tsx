@@ -96,6 +96,30 @@ function PopupApp() {
 
         <button
           style={{
+            background: '#8b5cf6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            width: '100%',
+            marginBottom: '8px'
+          }}
+          data-cy="open-portfolio-dashboard"
+          onClick={() => {
+            chrome.windows.create({
+              url: chrome.runtime.getURL('popup/portfolio-dashboard.html'),
+              type: 'popup',
+              width: 1000,
+              height: 700
+            });
+          }}
+        >
+          Portfolio Dashboard
+        </button>
+
+        <button
+          style={{
             background: '#f5f5f5',
             color: '#333',
             border: '1px solid #ddd',

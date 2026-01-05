@@ -248,3 +248,28 @@ export interface PriceAlertTrigger {
   currentPrice: number;
   timestamp: number;
 }
+
+/**
+ * Portfolio Overview Types
+ */
+export interface PortfolioMetrics {
+  totalValue: number;              // Total portfolio value in USD
+  realizedPnL: number;              // Realized P&L from completed trades
+  unrealizedPnL: number;            // Unrealized P&L from open positions
+  totalPnL: number;                 // Total P&L (realized + unrealized)
+  totalPnLPercent: number;          // Total P&L as percentage
+  positionCount: number;            // Number of open positions
+  totalVolume: number;              // Total trading volume (from order history)
+  lastUpdated: number;              // Timestamp of last calculation
+}
+
+export interface PositionBreakdown {
+  tokenId: string;
+  marketQuestion: string;
+  outcome: string;
+  size: number;                     // Position size in shares
+  currentValue: number;             // Current position value in USD
+  percentOfPortfolio: number;       // Percentage of total portfolio value
+  unrealizedPnL: number;            // Unrealized profit/loss
+  unrealizedPnLPercent: number;     // Unrealized P&L as percentage
+}

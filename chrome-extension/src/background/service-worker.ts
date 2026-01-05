@@ -16,6 +16,7 @@ import { fetchPositions, clearPositionsCache, refreshPositions } from './positio
 import type { PolymarketPosition } from '../shared/types/positions';
 import { checkPriceAlerts, setupNotificationHandlers } from './alert-monitor';
 import { getPriceAlerts, createPriceAlert, updatePriceAlert, deletePriceAlert, snoozePriceAlert, dismissPriceAlert, getAlertHistory } from '../storage/price-alerts';
+import { fetchPortfolioMetrics } from './portfolio-service';
 
 // Service worker lifecycle
 chrome.runtime.onInstalled.addListener((details) => {
@@ -126,6 +127,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'GET_ALERT_HISTORY':
           result = await handleGetAlertHistory();
+          break;
+
+        case 'GET_PORTFOLIO':
+          result = await handleGetPortfolio(message.proxyAddress);
           break;
 
         default:
@@ -579,6 +584,44 @@ async function handleGetAlertHistory() {
   } catch (error) {
     console.error('[ServiceWorker] Failed to get alert history:', error);
     throw error;
+  }
+}
+
+/**
+ * Get portfolio metrics
+ */
+async function handleGetPortfolio(proxyAddress?: string) {
+  try {
+    // Get proxy address from active session if not provided
+    const addresses = proxyAddress ? { proxyAddress } : getWalletAddresses();
+
+    if (!addresses?.proxyAddress) {
+      return {
+        success: false,
+        error: 'No wallet address available. Please unlock your wallet first.'
+      };
+    }
+
+    console.log('[ServiceWorker] Fetching portfolio metrics for', addresses.proxyAddress);
+
+    // Fetch positions
+    const positions = await fetchPositions(addresses.proxyAddress);
+    console.log(`[ServiceWorker] Fetched ${positions.length} positions`);
+
+    // Calculate portfolio metrics
+    const portfolio = await fetchPortfolioMetrics(positions);
+    console.log('[ServiceWorker] Portfolio metrics calculated:', portfolio.metrics);
+
+    return {
+      success: true,
+      data: portfolio
+    };
+  } catch (error: any) {
+    console.error('[ServiceWorker] Failed to fetch portfolio:', error);
+    return {
+      success: false,
+      error: error?.message || 'Failed to fetch portfolio metrics'
+    };
   }
 }
 

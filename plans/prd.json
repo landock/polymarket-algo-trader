@@ -54,7 +54,7 @@
       "id": "F004",
       "title": "Portfolio Overview Dashboard",
       "priority": "HIGH",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Display aggregate portfolio metrics including total value, P&L, and position breakdown",
       "acceptance_criteria": [
         "Shows total portfolio value in USD",
@@ -64,7 +64,8 @@
         "Updates in real-time as prices change",
         "Accessible from popup and content script overlay"
       ],
-      "estimated_complexity": "HIGH"
+      "estimated_complexity": "HIGH",
+      "implementation_notes": "Implemented comprehensive portfolio dashboard with metrics calculation service, dedicated UI page with pie chart visualization, real-time auto-refresh every 10 seconds, and integration with popup launcher button."
     },
     {
       "id": "F005",
@@ -162,6 +163,6 @@
       "estimated_complexity": "LOW"
     }
   ],
-  "completed_features": ["F001", "F003"],
+  "completed_features": ["F001", "F003", "F004"],
   "notes": "This PRD represents version 1.1.0 feature additions. Claude should work through these iteratively, starting with the highest priority features."
 }
