@@ -149,6 +149,84 @@ export default function OrderHistory() {
     return sortOrder === 'asc' ? '↑' : '↓';
   };
 
+  const escapeCSVValue = (value: any): string => {
+    if (value === null || value === undefined) return '';
+
+    const stringValue = String(value);
+
+    // If the value contains comma, newline, or double quote, wrap in quotes and escape quotes
+    if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+
+    return stringValue;
+  };
+
+  const exportToCSV = () => {
+    // Use filtered orders to respect current filters
+    const dataToExport = filteredOrders;
+
+    // Define CSV headers
+    const headers = [
+      'Timestamp',
+      'Date',
+      'Order Type',
+      'Algo Type',
+      'Token ID',
+      'Market Question',
+      'Outcome',
+      'Side',
+      'Size',
+      'Price',
+      'Executed Price',
+      'Status',
+      'Algo Order ID',
+      'CLOB Order ID',
+      'Error'
+    ];
+
+    // Create CSV rows
+    const rows = dataToExport.map(order => [
+      order.timestamp,
+      new Date(order.timestamp).toISOString(),
+      order.orderType,
+      order.algoType || '',
+      order.tokenId,
+      order.marketQuestion || '',
+      order.outcome || '',
+      order.side,
+      order.size,
+      order.price,
+      order.executedPrice || '',
+      order.status,
+      order.algoOrderId || '',
+      order.clobOrderId || '',
+      order.error || ''
+    ]);
+
+    // Build CSV content
+    const csvContent = [
+      headers.map(escapeCSVValue).join(','),
+      ...rows.map(row => row.map(escapeCSVValue).join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    link.setAttribute('download', `polymarket-order-history-${timestamp}.csv`);
+
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (orders.length === 0) {
     return (
       <div style={{
@@ -297,23 +375,43 @@ export default function OrderHistory() {
               </select>
             </div>
 
-            {/* Clear Filters Button */}
-            <button
-              onClick={clearFilters}
-              style={{
-                width: '100%',
-                padding: '6px',
-                background: '#f3f4f6',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 500,
-                color: '#374151',
-                cursor: 'pointer'
-              }}
-            >
-              Clear Filters
-            </button>
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={clearFilters}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  background: '#f3f4f6',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: '#374151',
+                  cursor: 'pointer'
+                }}
+              >
+                Clear Filters
+              </button>
+              <button
+                onClick={exportToCSV}
+                disabled={filteredOrders.length === 0}
+                style={{
+                  flex: 1,
+                  padding: '6px',
+                  background: filteredOrders.length === 0 ? '#f3f4f6' : '#10b981',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: filteredOrders.length === 0 ? '#9ca3af' : 'white',
+                  cursor: filteredOrders.length === 0 ? 'not-allowed' : 'pointer'
+                }}
+                data-cy="export-csv-button"
+              >
+                Export to CSV ({filteredOrders.length})
+              </button>
+            </div>
           </div>
 
           {/* Orders Table */}

@@ -22,7 +22,7 @@
       "id": "F002",
       "title": "Export Order History to CSV",
       "priority": "MEDIUM",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Allow users to export their order history to CSV format for analysis in spreadsheet tools",
       "acceptance_criteria": [
         "Export button in order history view",
@@ -31,7 +31,8 @@
         "Downloads with timestamp in filename",
         "Handles special characters in data properly"
       ],
-      "estimated_complexity": "LOW"
+      "estimated_complexity": "LOW",
+      "implementation_notes": "Implemented CSV export functionality in OrderHistory component with proper CSV escaping, timestamp-based filename generation, and filter-aware export. Added export button to UI and comprehensive E2E test."
     },
     {
       "id": "F003",
@@ -165,6 +166,6 @@
       "estimated_complexity": "LOW"
     }
   ],
-  "completed_features": ["F001", "F003", "F004", "F005", "F007"],
+  "completed_features": ["F001", "F002", "F003", "F004", "F005", "F007"],
   "notes": "This PRD represents version 1.1.0 feature additions. Claude should work through these iteratively, starting with the highest priority features."
 }

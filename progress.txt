@@ -420,3 +420,65 @@ Implemented comprehensive risk management system with the following capabilities
 - Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
 - Feature F008 (Multi-Market Watchlist) is MEDIUM priority and would improve market monitoring
 - Feature F006 (Transaction Cost Analysis) is LOW priority but could enhance order history
+
+### Iteration 6 - Export Order History to CSV (F002) - COMPLETED
+**Date:** 2026-01-05
+**Feature:** Export Order History to CSV (F002)
+**Status:** ✅ COMPLETED
+
+**Files Modified:**
+- `chrome-extension/src/content/ui/OrderHistory.tsx` - Added CSV export functionality with escapeCSVValue and exportToCSV functions, and Export to CSV button
+- `chrome-extension/tests/e2e/order-history.spec.ts` - Added comprehensive E2E test for CSV export with download verification
+- `plans/prd.json` - Updated F002 status to COMPLETED and added to completed_features list
+
+**Implementation Summary:**
+Implemented CSV export functionality for order history with the following capabilities:
+
+1. **CSV Export Function:**
+   - escapeCSVValue() - Properly escapes CSV values containing commas, newlines, or double quotes
+   - exportToCSV() - Generates CSV from filtered orders and triggers browser download
+   - CSV includes all order fields: Timestamp, Date, Order Type, Algo Type, Token ID, Market Question, Outcome, Side, Size, Price, Executed Price, Status, Algo Order ID, CLOB Order ID, Error
+   - Timestamp formatted as both Unix milliseconds and ISO 8601 date string
+
+2. **Filter-Aware Export:**
+   - Exports only the currently filtered orders (respects date range, order type, side, and status filters)
+   - Button shows count of orders to be exported
+   - Button disabled when no orders to export
+
+3. **Filename Generation:**
+   - Format: `polymarket-order-history-{ISO-timestamp}.csv`
+   - Example: `polymarket-order-history-2026-01-05T15-30-45.csv`
+   - Timestamp includes date and time for uniqueness
+
+4. **UI Integration:**
+   - Export button placed next to Clear Filters button
+   - Green button (#10b981) with white text when enabled
+   - Gray disabled state when no orders available
+   - Shows order count in button text: "Export to CSV (10)"
+   - data-cy attribute for E2E testing
+
+5. **E2E Test Coverage:**
+   - Test creates mock order history with various order types
+   - Verifies download event triggered
+   - Checks filename matches expected pattern
+   - Reads CSV content and verifies headers and data present
+   - Tests special characters in market questions
+
+**Acceptance Criteria Met:**
+✅ Export button in order history view
+✅ CSV includes all order data fields (15 columns)
+✅ Respects current filters when exporting (uses filteredOrders)
+✅ Downloads with timestamp in filename (ISO format with sanitized colons)
+✅ Handles special characters in data properly (CSV escaping with quotes)
+
+**Technical Notes:**
+- CSV escaping follows RFC 4180 standard (wraps in quotes, doubles internal quotes)
+- Uses Blob API for file generation and URL.createObjectURL for download
+- No external CSV libraries required - pure JavaScript implementation
+- Button state managed with disabled prop and conditional styling
+- Export works in popup page and content script overlay contexts
+
+**Next Steps:**
+- Feature F008 (Multi-Market Watchlist) is MEDIUM priority and would improve market monitoring
+- Feature F006 (Transaction Cost Analysis) is LOW priority but could enhance order history
+- Feature F009 (Performance Analytics Charts) is LOW priority but would provide valuable insights
