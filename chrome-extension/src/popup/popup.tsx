@@ -72,6 +72,30 @@ function PopupApp() {
 
         <button
           style={{
+            background: '#f59e0b',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            width: '100%',
+            marginBottom: '8px'
+          }}
+          data-cy="open-price-alerts"
+          onClick={() => {
+            chrome.windows.create({
+              url: chrome.runtime.getURL('popup/price-alerts.html'),
+              type: 'popup',
+              width: 900,
+              height: 700
+            });
+          }}
+        >
+          Price Alerts
+        </button>
+
+        <button
+          style={{
             background: '#f5f5f5',
             color: '#333',
             border: '1px solid #ddd',

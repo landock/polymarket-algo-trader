@@ -221,3 +221,30 @@ export interface OrderHistoryEntry {
   clobOrderId?: string;
   error?: string;
 }
+
+/**
+ * Price Alert Types
+ */
+export type PriceAlertCondition = 'ABOVE' | 'BELOW';
+
+export type PriceAlertStatus = 'ACTIVE' | 'TRIGGERED' | 'SNOOZED' | 'DISMISSED';
+
+export interface PriceAlert {
+  id: string;
+  tokenId: string;
+  marketQuestion?: string;
+  outcome?: string;
+  condition: PriceAlertCondition;
+  targetPrice: number;
+  status: PriceAlertStatus;
+  createdAt: number;
+  triggeredAt?: number;
+  snoozedUntil?: number;
+  notificationId?: string;
+}
+
+export interface PriceAlertTrigger {
+  alert: PriceAlert;
+  currentPrice: number;
+  timestamp: number;
+}

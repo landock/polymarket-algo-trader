@@ -14,6 +14,8 @@ import { initializeTradingSession, clearTradingSession, executeMarketOrder, getO
 import { testServiceWorkerDependencies } from './dependency-test';
 import { fetchPositions, clearPositionsCache, refreshPositions } from './positions-fetcher';
 import type { PolymarketPosition } from '../shared/types/positions';
+import { checkPriceAlerts, setupNotificationHandlers } from './alert-monitor';
+import { getPriceAlerts, createPriceAlert, updatePriceAlert, deletePriceAlert, snoozePriceAlert, dismissPriceAlert, getAlertHistory } from '../storage/price-alerts';
 
 // Service worker lifecycle
 chrome.runtime.onInstalled.addListener((details) => {
@@ -21,6 +23,9 @@ chrome.runtime.onInstalled.addListener((details) => {
 
   // Set up market monitoring (every 10 seconds)
   setupMarketMonitor(10);
+
+  // Set up notification handlers for price alerts
+  setupNotificationHandlers();
 });
 
 // Handle alarms
@@ -28,6 +33,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'market-monitor') {
     console.log('[ServiceWorker] Market monitor tick');
     await tickAlgoEngine();
+    // Also check price alerts on each monitor tick
+    await checkPriceAlerts();
   }
 });
 
@@ -91,6 +98,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         case 'REDEEM_POSITION':
           result = await handleRedeemPosition(message.position);
+          break;
+
+        case 'GET_PRICE_ALERTS':
+          result = await handleGetPriceAlerts();
+          break;
+
+        case 'CREATE_PRICE_ALERT':
+          result = await handleCreatePriceAlert(message.alert);
+          break;
+
+        case 'UPDATE_PRICE_ALERT':
+          result = await handleUpdatePriceAlert(message.alertId, message.updates);
+          break;
+
+        case 'DELETE_PRICE_ALERT':
+          result = await handleDeletePriceAlert(message.alertId);
+          break;
+
+        case 'SNOOZE_PRICE_ALERT':
+          result = await handleSnoozePriceAlert(message.alertId, message.durationMinutes);
+          break;
+
+        case 'DISMISS_PRICE_ALERT':
+          result = await handleDismissPriceAlert(message.alertId);
+          break;
+
+        case 'GET_ALERT_HISTORY':
+          result = await handleGetAlertHistory();
           break;
 
         default:
@@ -439,6 +474,110 @@ async function handleRedeemPosition(position: PolymarketPosition) {
     // return { success: true, txHash };
   } catch (error) {
     console.error('[ServiceWorker] Failed to redeem position:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all price alerts
+ */
+async function handleGetPriceAlerts() {
+  try {
+    const alerts = await getPriceAlerts();
+    console.log('[ServiceWorker] Retrieved', alerts.length, 'price alerts');
+    return { success: true, data: alerts };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get price alerts:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new price alert
+ */
+async function handleCreatePriceAlert(alertData: any) {
+  try {
+    const alert = await createPriceAlert(
+      alertData.tokenId,
+      alertData.condition,
+      alertData.targetPrice,
+      alertData.marketQuestion,
+      alertData.outcome
+    );
+    console.log('[ServiceWorker] Created price alert:', alert.id);
+    return { success: true, data: alert };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to create price alert:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update a price alert
+ */
+async function handleUpdatePriceAlert(alertId: string, updates: any) {
+  try {
+    await updatePriceAlert(alertId, updates);
+    console.log('[ServiceWorker] Updated price alert:', alertId);
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to update price alert:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a price alert
+ */
+async function handleDeletePriceAlert(alertId: string) {
+  try {
+    await deletePriceAlert(alertId);
+    console.log('[ServiceWorker] Deleted price alert:', alertId);
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to delete price alert:', error);
+    throw error;
+  }
+}
+
+/**
+ * Snooze a price alert
+ */
+async function handleSnoozePriceAlert(alertId: string, durationMinutes?: number) {
+  try {
+    await snoozePriceAlert(alertId, durationMinutes);
+    console.log('[ServiceWorker] Snoozed price alert:', alertId);
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to snooze price alert:', error);
+    throw error;
+  }
+}
+
+/**
+ * Dismiss a price alert
+ */
+async function handleDismissPriceAlert(alertId: string) {
+  try {
+    await dismissPriceAlert(alertId);
+    console.log('[ServiceWorker] Dismissed price alert:', alertId);
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to dismiss price alert:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get price alert history
+ */
+async function handleGetAlertHistory() {
+  try {
+    const history = await getAlertHistory();
+    console.log('[ServiceWorker] Retrieved', history.length, 'alert history entries');
+    return { success: true, data: history };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get alert history:', error);
     throw error;
   }
 }

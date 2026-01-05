@@ -205,12 +205,12 @@ npm run test:e2e
 
 Optional UI mode:
 ```bash
-npm run test:e2e:open
+npm run test:e2e:ui
 ```
 
 Notes:
-- Cypress loads the unpacked extension from `build/` and stubs `polymarket.com`.
-- Tests must run headed. Chrome headless does not load extensions.
+- Playwright loads the unpacked extension from `build/`.
+- Use `HEADLESS=1` if you want headless mode.
 
 ## Troubleshooting
 

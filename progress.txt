@@ -83,3 +83,87 @@ Implemented comprehensive order history tracking system with the following capab
 **Next Steps:**
 - Feature F002 (CSV Export) would be a natural next step as it builds on this implementation
 - Feature F004 (Portfolio Dashboard) or F003 (Price Alerts) are other high-priority options
+
+### Iteration 2 - Price Alert Notifications (F003) - COMPLETED
+**Date:** 2026-01-05
+**Feature:** Price Alert Notifications (F003)
+**Status:** ✅ COMPLETED
+
+**Files Created:**
+- `src/shared/types/index.ts` - Added PriceAlert, PriceAlertCondition, PriceAlertStatus, PriceAlertTrigger types
+- `src/storage/price-alerts.ts` - Price alert storage service with CRUD operations and history tracking
+- `src/background/alert-monitor.ts` - Alert monitoring service that checks prices and triggers Chrome notifications
+- `src/popup/price-alerts-page.tsx` - Dedicated React UI page for managing price alerts
+- `src/popup/price-alerts.html` - HTML page for price alerts interface
+
+**Files Modified:**
+- `src/background/service-worker.ts` - Added alert monitoring integration, notification handlers, and message handlers for alert operations
+- `src/popup/popup.tsx` - Added "Price Alerts" button to open alerts page
+- `webpack.config.js` - Added price-alerts-page entry and HtmlWebpackPlugin configuration
+
+**Implementation Summary:**
+Implemented comprehensive price alert notification system with the following capabilities:
+
+1. **Data Model:**
+   - PriceAlert type with fields: id, tokenId, marketQuestion, outcome, condition, targetPrice, status, createdAt, triggeredAt, snoozedUntil, notificationId
+   - PriceAlertCondition: 'ABOVE' | 'BELOW' for price threshold conditions
+   - PriceAlertStatus: 'ACTIVE' | 'TRIGGERED' | 'SNOOZED' | 'DISMISSED' for alert lifecycle
+   - PriceAlertTrigger for tracking alert history with price and timestamp
+
+2. **Storage Service:**
+   - Persistent storage in chrome.storage.local via storage adapter
+   - Create, read, update, delete operations for price alerts
+   - Get active alerts (filtering out triggered/dismissed, checking snooze expiration)
+   - Snooze functionality with configurable duration (default 60 minutes)
+   - Alert history tracking (max 100 entries)
+   - Helper functions for filtering alerts by token
+
+3. **Background Monitoring:**
+   - Integrated into existing market-monitor alarm (every 10 seconds)
+   - Fetches current prices using existing fetchTokenPrice() function
+   - Groups alerts by token to minimize API calls
+   - Triggers Chrome notifications when price conditions are met
+   - Notification buttons: "Snooze 1hr" and "Dismiss"
+   - Marks alerts as triggered and saves to history
+
+4. **Chrome Notifications:**
+   - Rich notifications with market name, outcome, current price, target price
+   - Interactive buttons for snooze and dismiss actions
+   - requireInteraction: true to keep visible until user responds
+   - Notification click handlers integrated into service worker
+
+5. **UI Component (Price Alerts Page):**
+   - Create new alerts with form: tokenId, marketQuestion, outcome, condition (above/below), targetPrice
+   - Two tabs: Active Alerts and History
+   - Active alerts display with status badges (🟢 Active, 🔴 Triggered, 🟡 Snoozed, ⚫ Dismissed)
+   - Alert cards showing market info, condition, target price, creation date
+   - Action buttons: Snooze (for triggered), Delete
+   - Separate section for recently triggered alerts
+   - Alert history view showing all triggered alerts with timestamp and price
+
+6. **Popup Integration:**
+   - Added "Price Alerts" button in main popup (orange/amber color)
+   - Opens dedicated price-alerts.html page in popup window (900x700)
+   - Consistent with existing Order History pattern
+
+7. **Service Worker Integration:**
+   - Message handlers for: GET_PRICE_ALERTS, CREATE_PRICE_ALERT, UPDATE_PRICE_ALERT, DELETE_PRICE_ALERT, SNOOZE_PRICE_ALERT, DISMISS_PRICE_ALERT, GET_ALERT_HISTORY
+   - Notification handlers set up on extension install
+   - Alert monitoring runs on every market-monitor tick
+
+**Acceptance Criteria Met:**
+✅ UI to create/edit/delete price alerts
+✅ Supports both 'above' and 'below' price thresholds
+✅ Service worker monitors prices and triggers alerts
+✅ Chrome notification shows market name, current price, and alert threshold
+✅ Alerts can be snoozed or dismissed
+✅ Alert history persists in storage
+
+**Build Status:**
+✅ TypeScript compilation successful (npm run type-check)
+✅ Webpack build successful with no errors
+
+**Next Steps:**
+- Feature F004 (Portfolio Overview Dashboard) is HIGH priority and would provide valuable trading insights
+- Feature F007 (Limit Order Support) is HIGH priority and would extend order execution capabilities
+- Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
