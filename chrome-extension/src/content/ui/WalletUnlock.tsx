@@ -81,7 +81,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
   // Show import form if no encrypted key exists
   if (!hasEncryptedKey || showImport) {
     return (
-      <div className="wallet-unlock">
+        <div className="wallet-unlock" data-cy="wallet-import">
         <h4 style={{ marginTop: 0, marginBottom: '16px' }}>Import Wallet</h4>
         <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px' }}>
           Import your private key to get started. It will be encrypted and stored securely.
@@ -98,6 +98,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
               onChange={(e) => setPrivateKey(e.target.value)}
               placeholder="0x..."
               disabled={isUnlocking}
+              data-cy="import-private-key"
               style={{ width: '100%' }}
             />
             <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -115,6 +116,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters"
               disabled={isUnlocking}
+              data-cy="import-password"
               style={{ width: '100%' }}
             />
             <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -131,7 +133,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
               marginBottom: '12px',
               fontSize: '13px',
               color: '#c33'
-            }}>
+            }} data-cy="wallet-error">
               {error}
             </div>
           )}
@@ -139,6 +141,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
           <button
             type="submit"
             disabled={isUnlocking || !privateKey || !password}
+            data-cy="import-submit"
             style={{ width: '100%', marginBottom: '8px' }}
           >
             {isUnlocking ? 'Importing...' : 'Import & Encrypt'}
@@ -148,6 +151,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
             <button
               type="button"
               onClick={() => setShowImport(false)}
+              data-cy="back-to-unlock"
               style={{
                 width: '100%',
                 background: 'transparent',
@@ -178,7 +182,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
 
   // Show unlock form if encrypted key exists
   return (
-    <div className="wallet-unlock">
+    <div className="wallet-unlock" data-cy="wallet-unlock">
       <h4 style={{ marginTop: 0, marginBottom: '16px' }}>Unlock Wallet</h4>
       <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px' }}>
         Enter your password to unlock your wallet and start trading.
@@ -196,6 +200,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
             placeholder="Enter your password"
             disabled={isUnlocking}
             autoFocus
+            data-cy="unlock-password"
             style={{ width: '100%' }}
           />
         </div>
@@ -209,7 +214,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
             marginBottom: '12px',
             fontSize: '13px',
             color: '#c33'
-          }}>
+          }} data-cy="wallet-error">
             {error}
           </div>
         )}
@@ -217,6 +222,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
         <button
           type="submit"
           disabled={isUnlocking || !password}
+          data-cy="unlock-submit"
           style={{ width: '100%', marginBottom: '8px' }}
         >
           {isUnlocking ? 'Unlocking...' : 'Unlock Wallet'}
@@ -225,6 +231,7 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
         <button
           type="button"
           onClick={() => setShowImport(true)}
+          data-cy="show-import"
           style={{
             width: '100%',
             background: 'transparent',

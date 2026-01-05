@@ -190,11 +190,12 @@ export default function AlgoTradingPanel() {
   };
 
   return (
-    <div className="algo-panel" style={{ position: 'relative' }}>
+    <div className="algo-panel" style={{ position: 'relative' }} data-cy="algo-panel">
       {/* Panel Header */}
       <div
         className="algo-panel-header"
         onClick={() => setIsExpanded(!isExpanded)}
+        data-cy="algo-panel-header"
       >
         <div>
           <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>
@@ -213,7 +214,7 @@ export default function AlgoTradingPanel() {
 
       {/* Panel Body */}
       {isExpanded && (
-        <div className="algo-panel-body">
+        <div className="algo-panel-body" data-cy="algo-panel-body">
               {!isUnlocked ? (
             /* Show wallet unlock if not unlocked */
             <WalletUnlock onUnlocked={() => console.log('Wallet unlocked!')} />
@@ -241,6 +242,7 @@ export default function AlgoTradingPanel() {
                 </div>
                 <button
                   onClick={() => lockWallet()}
+                  data-cy="lock-wallet"
                   style={{
                     padding: '6px 12px',
                     fontSize: '12px',
@@ -271,6 +273,7 @@ export default function AlgoTradingPanel() {
                       setOrderFormInitialData(undefined);
                       setShowOrderForm(true);
                     }}
+                    data-cy="create-algo-order"
                     style={{
                       width: '100%',
                       marginBottom: '16px',
@@ -291,6 +294,7 @@ export default function AlgoTradingPanel() {
                   <div style={{ marginBottom: '16px' }}>
                     <div
                       onClick={() => setShowPositions(!showPositions)}
+                      data-cy="positions-toggle"
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -312,6 +316,7 @@ export default function AlgoTradingPanel() {
 
                     {showPositions && (
                       <PositionsList
+                        data-cy="positions-list"
                         positions={positions}
                         isLoading={isLoadingPositions}
                         error={positionsError}

@@ -198,14 +198,19 @@ Tests cover:
 - Error handling
 
 ### E2E Tests (Cypress)
-Note: The existing Cypress tests are for the main web application, not the extension.
+```bash
+npm run build
+npm run test:e2e
+```
 
-To test the extension with Cypress, you would need to:
-1. Configure Cypress to load the extension
-2. Test the extension on a real website
-3. Mock Chrome APIs
+Optional UI mode:
+```bash
+npm run test:e2e:open
+```
 
-This is advanced and not included in the current setup.
+Notes:
+- Cypress loads the unpacked extension from `build/` and stubs `polymarket.com`.
+- Tests must run headed. Chrome headless does not load extensions.
 
 ## Troubleshooting
 

@@ -158,6 +158,7 @@ export default function PositionCard({
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         <button
           onClick={() => onCreateOrder(position)}
+          data-cy="position-create-order"
           style={{
             flex: '1 1 calc(50% - 3px)',
             minWidth: '120px',
@@ -178,6 +179,7 @@ export default function PositionCard({
 
         <button
           onClick={() => onQuickSell(position)}
+          data-cy="position-quick-sell"
           style={{
             flex: '1 1 calc(50% - 3px)',
             minWidth: '120px',
@@ -198,6 +200,7 @@ export default function PositionCard({
 
         <button
           onClick={() => onViewMarket(position)}
+          data-cy="position-view-market"
           style={{
             flex: '1 1 calc(50% - 3px)',
             minWidth: '120px',
@@ -219,6 +222,7 @@ export default function PositionCard({
         {position.redeemable && (
           <button
             onClick={() => onRedeem(position)}
+            data-cy="position-redeem"
             style={{
               flex: '1 1 calc(50% - 3px)',
               minWidth: '120px',

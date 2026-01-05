@@ -9,7 +9,10 @@ import ReactDOM from 'react-dom/client';
 
 function SettingsApp() {
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+    <div
+      style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}
+      data-cy="settings-root"
+    >
       <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
         Polymarket Algo Trader - Settings
       </h1>
@@ -28,6 +31,7 @@ function SettingsApp() {
           <input
             type="text"
             placeholder="https://polygon-rpc.com"
+            data-cy="rpc-url-input"
             style={{
               width: '100%',
               padding: '8px 12px',
@@ -48,6 +52,7 @@ function SettingsApp() {
             Market Monitor Interval (seconds)
           </label>
           <select
+            data-cy="monitor-interval"
             style={{
               width: '100%',
               padding: '8px 12px',
@@ -65,7 +70,7 @@ function SettingsApp() {
 
         <div style={{ marginBottom: '16px' }}>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-            <input type="checkbox" style={{ marginRight: '8px' }} />
+            <input type="checkbox" style={{ marginRight: '8px' }} data-cy="notifications-toggle" />
             <span>Enable notifications for algo order executions</span>
           </label>
         </div>
@@ -84,6 +89,7 @@ function SettingsApp() {
             padding: '8px 16px',
             cursor: 'pointer'
           }}
+          data-cy="clear-data"
           onClick={() => {
             if (confirm('Are you sure you want to clear all data?')) {
               chrome.storage.local.clear(() => {

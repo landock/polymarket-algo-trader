@@ -47,7 +47,7 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 10001
-    }}>
+    }} data-cy="order-preview">
       <div style={{
         background: 'white',
         borderRadius: '12px',
@@ -55,7 +55,7 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
         maxWidth: '400px',
         width: '90%',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-      }}>
+      }} data-cy="order-preview-card">
         <h3 style={{
           margin: '0 0 16px 0',
           fontSize: '18px',
@@ -235,6 +235,7 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={onCancel}
+            data-cy="order-preview-cancel"
             style={{
               flex: 1,
               padding: '10px',
@@ -251,6 +252,7 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
           </button>
           <button
             onClick={onConfirm}
+            data-cy="order-preview-confirm"
             style={{
               flex: 1,
               padding: '10px',

@@ -140,7 +140,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
   };
 
   return (
-    <div className="algo-order-form">
+    <div className="algo-order-form" data-cy="algo-order-form">
       <h4 style={{ marginTop: 0, marginBottom: '16px' }}>Create Algo Order</h4>
 
       <form onSubmit={handleSubmit}>
@@ -152,6 +152,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
           <select
             value={orderType}
             onChange={(e) => setOrderType(e.target.value as AlgoOrderType)}
+            data-cy="order-type"
             style={{ width: '100%' }}
           >
             <option value="TRAILING_STOP">Trailing Stop</option>
@@ -171,6 +172,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
             onChange={(e) => setTokenId(e.target.value)}
             placeholder="Enter token ID"
             required
+            data-cy="token-id"
             style={{ width: '100%' }}
           />
           <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -187,6 +189,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
             <button
               type="button"
               onClick={() => setSide('BUY')}
+              data-cy="side-buy"
               style={{
                 flex: 1,
                 background: side === 'BUY' ? '#10b981' : 'transparent',
@@ -204,6 +207,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
             <button
               type="button"
               onClick={() => setSide('SELL')}
+              data-cy="side-sell"
               style={{
                 flex: 1,
                 background: side === 'SELL' ? '#ef4444' : 'transparent',
@@ -237,6 +241,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
             min="0.01"
             step="0.01"
             required
+            data-cy="order-size"
             style={{ width: '100%' }}
           />
         </div>
@@ -256,6 +261,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
                 min="0.1"
                 step="0.1"
                 required
+                data-cy="trail-percent"
                 style={{ width: '100%' }}
               />
               <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -275,6 +281,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
                 min="0.01"
                 max="0.99"
                 step="0.01"
+                data-cy="trigger-price"
                 style={{ width: '100%' }}
               />
               <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -298,6 +305,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
                 min="0.01"
                 max="0.99"
                 step="0.01"
+                data-cy="stop-loss-price"
                 style={{ width: '100%' }}
               />
               <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -317,6 +325,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
                 min="0.01"
                 max="0.99"
                 step="0.01"
+                data-cy="take-profit-price"
                 style={{ width: '100%' }}
               />
               <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -340,6 +349,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
                 min="1"
                 step="1"
                 required
+                data-cy="twap-duration"
                 style={{ width: '100%' }}
               />
               <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -359,6 +369,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
                 min="1"
                 step="1"
                 required
+                data-cy="twap-interval"
                 style={{ width: '100%' }}
               />
               <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0 0' }}>
@@ -376,6 +387,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
           <button
             type="button"
             onClick={onCancel}
+            data-cy="order-cancel"
             style={{
               flex: 1,
               background: 'transparent',
@@ -388,6 +400,7 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
           <button
             type="submit"
             disabled={showValidation && !validation.isValid}
+            data-cy="order-submit"
             style={{
               flex: 1,
               opacity: showValidation && !validation.isValid ? 0.5 : 1,

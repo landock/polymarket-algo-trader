@@ -217,7 +217,7 @@ export function formatValidationMessages(result: ValidationResult): React.ReactE
   }
 
   return (
-    <div style={{ marginBottom: '16px' }}>
+    <div style={{ marginBottom: '16px' }} data-cy="order-validation">
       {result.errors.length > 0 && (
         <div style={{
           padding: '12px',

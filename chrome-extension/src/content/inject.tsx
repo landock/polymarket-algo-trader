@@ -16,6 +16,7 @@ if (window.location.hostname.includes('polymarket.com')) {
   // Create container for extension UI
   const container = document.createElement('div');
   container.id = 'polymarket-algo-extension';
+  container.setAttribute('data-extension-id', chrome.runtime.id);
   container.style.cssText = `
     position: fixed;
     top: 80px;

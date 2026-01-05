@@ -23,6 +23,8 @@ import {
 } from '../shared/constants/proxyWallet';
 import { validateOrder, validateBalance, formatValidationErrors } from './order-validation';
 import { retryWithBackoff } from './retry-utility';
+import { saveOrderToHistory } from '../storage/order-history';
+import type { OrderHistoryEntry } from '../shared/types';
 
 // Configure axios to use fetch adapter for service worker compatibility
 // Service workers don't have XMLHttpRequest, only Fetch API
@@ -350,15 +352,60 @@ export async function executeMarketOrder(
 
     if (response.success && response.orderID) {
       console.log(`[TradingSession] ✅ Order placed successfully:`, response.orderID);
+
+      // Track order in history
+      const historyEntry: OrderHistoryEntry = {
+        id: `market-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        orderType: 'MARKET',
+        tokenId,
+        side,
+        size,
+        price: marketPrice,
+        executedPrice: currentPrice,
+        status: 'EXECUTED',
+        clobOrderId: response.orderID
+      };
+      await saveOrderToHistory(historyEntry);
+
       return { success: true, orderId: response.orderID };
     } else {
       const errorMsg = response.error || 'Unknown error';
       console.error('[TradingSession] ❌ Order failed:', response);
 
+      // Track failed order in history
+      const historyEntry: OrderHistoryEntry = {
+        id: `market-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        orderType: 'MARKET',
+        tokenId,
+        side,
+        size,
+        price: marketPrice,
+        status: 'FAILED',
+        error: errorMsg
+      };
+      await saveOrderToHistory(historyEntry);
+
       return { success: false, error: errorMsg };
     }
   } catch (error: any) {
     console.error('[TradingSession] Failed to execute order:', error);
+
+    // Track failed order in history
+    const historyEntry: OrderHistoryEntry = {
+      id: `market-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      timestamp: Date.now(),
+      orderType: 'MARKET',
+      tokenId,
+      side,
+      size,
+      price: 0,
+      status: 'FAILED',
+      error: error.message || 'Failed to execute order'
+    };
+    await saveOrderToHistory(historyEntry);
+
     return { success: false, error: error.message || 'Failed to execute order' };
   }
 }
@@ -444,13 +491,58 @@ export async function executeLimitOrder(
 
     if (response.success && response.orderID) {
       console.log(`[TradingSession] ✅ Limit order placed successfully:`, response.orderID);
+
+      // Track order in history (limit orders start as pending)
+      const historyEntry: OrderHistoryEntry = {
+        id: `limit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        orderType: 'LIMIT',
+        tokenId,
+        side,
+        size,
+        price,
+        status: 'PENDING',
+        clobOrderId: response.orderID
+      };
+      await saveOrderToHistory(historyEntry);
+
       return { success: true, orderId: response.orderID };
     } else {
       console.error('[TradingSession] ❌ Limit order failed:', response);
+
+      // Track failed order in history
+      const historyEntry: OrderHistoryEntry = {
+        id: `limit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        orderType: 'LIMIT',
+        tokenId,
+        side,
+        size,
+        price,
+        status: 'FAILED',
+        error: response.error || 'Unknown error'
+      };
+      await saveOrderToHistory(historyEntry);
+
       return { success: false, error: response.error || 'Unknown error' };
     }
   } catch (error: any) {
     console.error('[TradingSession] Failed to execute order:', error);
+
+    // Track failed order in history
+    const historyEntry: OrderHistoryEntry = {
+      id: `limit-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      timestamp: Date.now(),
+      orderType: 'LIMIT',
+      tokenId,
+      side,
+      size,
+      price,
+      status: 'FAILED',
+      error: error.message || 'Failed to execute order'
+    };
+    await saveOrderToHistory(historyEntry);
+
     return { success: false, error: error.message || 'Failed to execute order' };
   }
 }

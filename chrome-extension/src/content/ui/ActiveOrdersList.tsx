@@ -65,7 +65,7 @@ export default function ActiveOrdersList({
   };
 
   return (
-    <div className="active-orders-list">
+    <div className="active-orders-list" data-cy="active-orders-list">
       {orders.map((order) => (
         <div
           key={order.id}
@@ -76,6 +76,7 @@ export default function ActiveOrdersList({
             borderRadius: '8px',
             marginBottom: '8px'
           }}
+          data-cy={`algo-order-${order.id}`}
         >
           {/* Order Header */}
           <div style={{
@@ -158,6 +159,7 @@ export default function ActiveOrdersList({
             {order.status === 'ACTIVE' && onPause && (
               <button
                 onClick={() => onPause(order.id)}
+                data-cy={`algo-order-pause-${order.id}`}
                 style={{
                   flex: 1,
                   padding: '6px',
@@ -173,6 +175,7 @@ export default function ActiveOrdersList({
             {order.status === 'PAUSED' && onResume && (
               <button
                 onClick={() => onResume(order.id)}
+                data-cy={`algo-order-resume-${order.id}`}
                 style={{
                   flex: 1,
                   padding: '6px',
@@ -188,6 +191,7 @@ export default function ActiveOrdersList({
             {onCancel && order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
               <button
                 onClick={() => onCancel(order.id)}
+                data-cy={`algo-order-cancel-${order.id}`}
                 style={{
                   flex: 1,
                   padding: '6px',

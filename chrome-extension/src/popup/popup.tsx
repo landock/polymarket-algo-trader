@@ -12,8 +12,11 @@ import TradingProvider from '../shared/providers/TradingProvider';
 
 function PopupApp() {
   return (
-    <div style={{ padding: '20px', minWidth: '400px' }}>
-      <h1 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>
+    <div style={{ padding: '20px', minWidth: '400px' }} data-cy="popup-root">
+      <h1
+        style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}
+        data-cy="popup-title"
+      >
         Polymarket Algo Trader
       </h1>
       <p style={{ marginBottom: '12px', color: '#666' }}>
@@ -35,11 +38,36 @@ function PopupApp() {
             width: '100%',
             marginBottom: '8px'
           }}
+          data-cy="open-polymarket"
           onClick={() => {
             chrome.tabs.create({ url: 'https://polymarket.com' });
           }}
         >
           Open Polymarket
+        </button>
+
+        <button
+          style={{
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            width: '100%',
+            marginBottom: '8px'
+          }}
+          data-cy="open-order-history"
+          onClick={() => {
+            chrome.windows.create({
+              url: chrome.runtime.getURL('popup/order-history.html'),
+              type: 'popup',
+              width: 800,
+              height: 600
+            });
+          }}
+        >
+          Order History
         </button>
 
         <button
@@ -52,6 +80,7 @@ function PopupApp() {
             cursor: 'pointer',
             width: '100%'
           }}
+          data-cy="open-settings"
           onClick={() => {
             chrome.runtime.openOptionsPage();
           }}

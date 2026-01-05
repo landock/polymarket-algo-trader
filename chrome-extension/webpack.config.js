@@ -12,6 +12,7 @@ module.exports = (env, argv) => {
       'content/inject': './src/content/inject.tsx',
       'popup/popup': './src/popup/popup.tsx',
       'popup/settings': './src/popup/settings.tsx',
+      'popup/order-history-page': './src/popup/order-history-page.tsx',
     },
     output: {
       path: path.resolve(__dirname, 'build'),
@@ -69,6 +70,11 @@ module.exports = (env, argv) => {
         template: './src/popup/settings.html',
         filename: 'popup/settings.html',
         chunks: ['popup/settings'],
+      }),
+      new HtmlWebpackPlugin({
+        template: './src/popup/order-history.html',
+        filename: 'popup/order-history.html',
+        chunks: ['popup/order-history-page'],
       }),
       new CopyWebpackPlugin({
         patterns: [

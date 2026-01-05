@@ -18,6 +18,7 @@ interface PositionsListProps {
   onViewMarket: (position: PolymarketPosition) => void;
   onRedeem: (position: PolymarketPosition) => void;
   onRefresh?: () => void;
+  "data-cy"?: string;
 }
 
 export default function PositionsList({
@@ -28,7 +29,8 @@ export default function PositionsList({
   onQuickSell,
   onViewMarket,
   onRedeem,
-  onRefresh
+  onRefresh,
+  "data-cy": dataCy
 }: PositionsListProps) {
   // Error State
   if (error && positions.length === 0) {
@@ -41,6 +43,7 @@ export default function PositionsList({
           border: '1px solid #fecaca',
           borderRadius: '8px',
         }}
+        data-cy="positions-error"
       >
         <div style={{ fontSize: '13px', color: '#991b1b', marginBottom: '8px' }}>
           ⚠️ {error}
@@ -79,6 +82,7 @@ export default function PositionsList({
           alignItems: 'center',
           gap: '12px',
         }}
+        data-cy="positions-loading"
       >
         <LoadingSpinner />
         <div style={{ fontSize: '12px', color: '#6b7280' }}>
@@ -99,6 +103,7 @@ export default function PositionsList({
           borderRadius: '8px',
           background: '#f9fafb',
         }}
+        data-cy="positions-empty"
       >
         <div style={{ fontSize: '32px', marginBottom: '8px' }}>
           📊
@@ -115,7 +120,7 @@ export default function PositionsList({
 
   // Positions List
   return (
-    <div>
+    <div data-cy={dataCy}>
       {/* Loading indicator for background refresh */}
       {isLoading && positions.length > 0 && (
         <div

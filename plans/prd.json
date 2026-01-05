@@ -1,0 +1,166 @@
+{
+  "product": "Polymarket Algorithmic Trading Chrome Extension",
+  "version": "1.1.0",
+  "features": [
+    {
+      "id": "F001",
+      "title": "Order History View",
+      "priority": "HIGH",
+      "status": "COMPLETED",
+      "description": "Display a comprehensive history of all executed orders with filtering and sorting capabilities",
+      "acceptance_criteria": [
+        "Shows timestamp, order type, token, side, size, price for each order",
+        "Allows filtering by date range, order type, and token",
+        "Allows sorting by any column",
+        "Data persists in chrome.storage.local",
+        "Accessible from popup UI"
+      ],
+      "estimated_complexity": "MEDIUM",
+      "implementation_notes": "Implemented comprehensive order history system with storage service, UI component with filtering/sorting, tracking in order execution flow, and dedicated popup page accessible from main popup."
+    },
+    {
+      "id": "F002",
+      "title": "Export Order History to CSV",
+      "priority": "MEDIUM",
+      "status": "NOT_STARTED",
+      "description": "Allow users to export their order history to CSV format for analysis in spreadsheet tools",
+      "acceptance_criteria": [
+        "Export button in order history view",
+        "CSV includes all order data fields",
+        "Respects current filters when exporting",
+        "Downloads with timestamp in filename",
+        "Handles special characters in data properly"
+      ],
+      "estimated_complexity": "LOW"
+    },
+    {
+      "id": "F003",
+      "title": "Price Alert Notifications",
+      "priority": "HIGH",
+      "status": "NOT_STARTED",
+      "description": "Allow users to set price alerts for specific markets and receive Chrome notifications",
+      "acceptance_criteria": [
+        "UI to create/edit/delete price alerts",
+        "Supports both 'above' and 'below' price thresholds",
+        "Service worker monitors prices and triggers alerts",
+        "Chrome notification shows market name, current price, and alert threshold",
+        "Alerts can be snoozed or dismissed",
+        "Alert history persists in storage"
+      ],
+      "estimated_complexity": "HIGH"
+    },
+    {
+      "id": "F004",
+      "title": "Portfolio Overview Dashboard",
+      "priority": "HIGH",
+      "status": "NOT_STARTED",
+      "description": "Display aggregate portfolio metrics including total value, P&L, and position breakdown",
+      "acceptance_criteria": [
+        "Shows total portfolio value in USD",
+        "Shows realized P&L (from completed trades)",
+        "Shows unrealized P&L (from open positions)",
+        "Pie chart showing position distribution by market",
+        "Updates in real-time as prices change",
+        "Accessible from popup and content script overlay"
+      ],
+      "estimated_complexity": "HIGH"
+    },
+    {
+      "id": "F005",
+      "title": "Risk Management Settings",
+      "priority": "MEDIUM",
+      "status": "NOT_STARTED",
+      "description": "Allow users to configure risk parameters like max position size and daily loss limits",
+      "acceptance_criteria": [
+        "Settings UI for max position size per market",
+        "Setting for max daily loss limit",
+        "Setting for max total portfolio exposure",
+        "Orders that would violate limits are rejected with clear error message",
+        "Settings persist in chrome.storage.local",
+        "Can temporarily override with confirmation dialog"
+      ],
+      "estimated_complexity": "MEDIUM"
+    },
+    {
+      "id": "F006",
+      "title": "Transaction Cost Analysis",
+      "priority": "LOW",
+      "status": "NOT_STARTED",
+      "description": "Track and display transaction fees, gas costs, and slippage for each trade",
+      "acceptance_criteria": [
+        "Captures gas cost for each transaction",
+        "Calculates slippage (expected vs actual price)",
+        "Shows total fees paid over time periods (day/week/month)",
+        "Includes fee data in order history export",
+        "Dashboard widget showing fee summary"
+      ],
+      "estimated_complexity": "MEDIUM"
+    },
+    {
+      "id": "F007",
+      "title": "Limit Order Support",
+      "priority": "HIGH",
+      "status": "NOT_STARTED",
+      "description": "Add support for limit orders that execute when market price reaches target",
+      "acceptance_criteria": [
+        "UI to create limit orders with target price",
+        "Service worker monitors prices and executes when target reached",
+        "Shows pending limit orders in orders view",
+        "Can cancel pending limit orders",
+        "Integrates with existing order validation and retry logic",
+        "Persists across browser restarts"
+      ],
+      "estimated_complexity": "HIGH"
+    },
+    {
+      "id": "F008",
+      "title": "Multi-Market Watchlist",
+      "priority": "MEDIUM",
+      "status": "NOT_STARTED",
+      "description": "Allow users to create a watchlist of markets for quick monitoring",
+      "acceptance_criteria": [
+        "Add/remove markets to watchlist",
+        "Shows current price and 24h change for each market",
+        "Updates prices in real-time",
+        "Quick action buttons to create orders",
+        "Reorderable via drag-and-drop",
+        "Persists in storage"
+      ],
+      "estimated_complexity": "MEDIUM"
+    },
+    {
+      "id": "F009",
+      "title": "Performance Analytics Charts",
+      "priority": "LOW",
+      "status": "NOT_STARTED",
+      "description": "Visualize trading performance over time with interactive charts",
+      "acceptance_criteria": [
+        "Line chart showing portfolio value over time",
+        "Bar chart showing daily P&L",
+        "Win rate and average win/loss metrics",
+        "Sharpe ratio calculation",
+        "Time period selector (1D/7D/30D/ALL)",
+        "Uses Chart.js or similar library"
+      ],
+      "estimated_complexity": "HIGH"
+    },
+    {
+      "id": "F010",
+      "title": "Keyboard Shortcuts",
+      "priority": "LOW",
+      "status": "NOT_STARTED",
+      "description": "Add keyboard shortcuts for common actions to improve trading speed",
+      "acceptance_criteria": [
+        "Configurable keyboard shortcuts in settings",
+        "Quick buy/sell for selected market",
+        "Quick cancel all orders",
+        "Toggle UI overlay visibility",
+        "Navigate between markets in watchlist",
+        "Shows shortcut hints in UI tooltips"
+      ],
+      "estimated_complexity": "LOW"
+    }
+  ],
+  "completed_features": ["F001"],
+  "notes": "This PRD represents version 1.1.0 feature additions. Claude should work through these iteratively, starting with the highest priority features."
+}

@@ -132,7 +132,7 @@ export default function ClobOrdersList() {
         border: '1px solid #fecaca',
         borderRadius: '6px',
         marginBottom: '16px'
-      }}>
+      }} data-cy="clob-orders-error">
         <div style={{ fontSize: '13px', color: '#991b1b', marginBottom: '8px' }}>
           ⚠️ {error}
         </div>
@@ -156,7 +156,7 @@ export default function ClobOrdersList() {
   }
 
   return (
-    <div style={{ marginBottom: '16px' }}>
+    <div style={{ marginBottom: '16px' }} data-cy="clob-orders">
       <div
         onClick={() => setIsExpanded(!isExpanded)}
         style={{
@@ -170,6 +170,7 @@ export default function ClobOrdersList() {
           marginBottom: isExpanded ? '12px' : 0,
           border: '1px solid #bae6fd'
         }}
+        data-cy="clob-orders-toggle"
       >
         <div style={{ fontSize: '13px', fontWeight: 600, color: '#0c4a6e' }}>
           📋 Real Orders on Exchange ({orders.length})
@@ -187,7 +188,7 @@ export default function ClobOrdersList() {
               textAlign: 'center',
               color: '#6b7280',
               fontSize: '13px'
-            }}>
+            }} data-cy="clob-orders-loading">
               Loading orders...
             </div>
           ) : orders.length === 0 ? (
@@ -197,7 +198,7 @@ export default function ClobOrdersList() {
               border: '2px dashed #e5e7eb',
               borderRadius: '6px',
               background: '#f9fafb'
-            }}>
+            }} data-cy="clob-orders-empty">
               <div style={{ fontSize: '13px', color: '#6b7280' }}>
                 No open orders on the exchange
               </div>
@@ -206,7 +207,7 @@ export default function ClobOrdersList() {
               </div>
             </div>
           ) : (
-            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }} data-cy="clob-orders-list">
               {orders.map((order) => {
                 const { matched, remaining, percentFilled } = calculateFilled(order);
                 const statusColor = getStatusColor(order.status);
@@ -221,6 +222,7 @@ export default function ClobOrdersList() {
                       borderRadius: '6px',
                       marginBottom: '8px'
                     }}
+                    data-cy={`clob-order-${order.id}`}
                   >
                     {/* Header */}
                     <div style={{

@@ -1,0 +1,85 @@
+# Autonomous Coding Progress Log
+
+## Purpose
+This file tracks progress across autonomous coding iterations. Each iteration should append notes about:
+- Which feature was implemented
+- What files were created/modified
+- Any issues encountered
+- What's left to do
+
+## Instructions for Claude
+After completing each feature:
+1. Append your progress notes below
+2. Mark the feature as complete in plans/prd.json
+3. Make a git commit with a clear message
+
+---
+
+## Iteration Log
+
+[Iterations will be logged below this line]
+
+### Iteration 1 - Order History View (F001) - COMPLETED
+**Date:** 2026-01-05
+**Feature:** Order History View (F001)
+**Status:** ✅ COMPLETED
+
+**Files Created:**
+- `src/storage/order-history.ts` - Order history storage service with filtering capabilities
+- `src/popup/order-history.html` - Dedicated order history page HTML
+- `src/popup/order-history-page.tsx` - Order history page React component
+
+**Files Modified:**
+- `src/shared/types/index.ts` - Added OrderHistoryEntry type definition
+- `src/content/ui/OrderHistory.tsx` - Completely rewrote to support comprehensive filtering and sorting
+- `src/background/trading-session.ts` - Added order tracking for market and limit orders
+- `src/background/algo-engine.ts` - Added order tracking for algorithmic order executions
+- `src/popup/popup.tsx` - Added "Order History" button to open dedicated history page
+- `webpack.config.js` - Added order-history-page entry and HtmlWebpackPlugin configuration
+
+**Implementation Summary:**
+Implemented comprehensive order history tracking system with the following capabilities:
+
+1. **Data Model:**
+   - OrderHistoryEntry type with fields: id, timestamp, orderType, algoType, tokenId, side, size, price, executedPrice, status, marketQuestion, outcome, algoOrderId, clobOrderId, error
+   - Supports MARKET, LIMIT, and ALGO order types
+   - Tracks order status: PENDING, EXECUTED, FAILED, CANCELLED
+
+2. **Storage Service:**
+   - Persistent storage in chrome.storage.local
+   - Max 1000 entries to prevent bloat
+   - Helper functions for filtering by date range, order type, token, side, status
+   - Functions to get recent history, count entries, update entries
+
+3. **Order Tracking:**
+   - Integrated into executeMarketOrder() - tracks successful and failed market orders
+   - Integrated into executeLimitOrder() - tracks successful and failed limit orders (pending status)
+   - Integrated into algo-engine executeOrder() - tracks algo order executions with algoOrderId
+
+4. **UI Component:**
+   - Enhanced OrderHistory.tsx with comprehensive table view
+   - Filters: date range (start/end), order type, side, status
+   - Sortable columns: timestamp, order type, side, size, price
+   - Responsive grid layout with sticky header
+   - Shows market question, execution details, errors
+   - Clear filters button
+
+5. **Popup Integration:**
+   - Added "Order History" button in main popup
+   - Opens dedicated order-history.html in new popup window (800x600)
+   - Full-featured view with all filtering and sorting capabilities
+
+**Acceptance Criteria Met:**
+✅ Shows timestamp, order type, token, side, size, price for each order
+✅ Allows filtering by date range, order type, and token (plus side and status)
+✅ Allows sorting by any column (timestamp, type, side, size, price)
+✅ Data persists in chrome.storage.local
+✅ Accessible from popup UI
+
+**Build Status:**
+✅ TypeScript compilation successful (npm run type-check)
+✅ Webpack build successful with no errors
+
+**Next Steps:**
+- Feature F002 (CSV Export) would be a natural next step as it builds on this implementation
+- Feature F004 (Portfolio Dashboard) or F003 (Price Alerts) are other high-priority options

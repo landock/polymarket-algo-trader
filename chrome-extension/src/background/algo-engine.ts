@@ -9,6 +9,8 @@ import { evaluateTrailingStop } from './algo/trailing-stop';
 import { evaluateStopLoss } from './algo/stop-loss';
 import { evaluateTWAP } from './algo/twap';
 import { executeMarketOrder, hasTradingSession } from './trading-session';
+import { saveOrderToHistory, updateOrderHistoryEntry } from '../storage/order-history';
+import type { OrderHistoryEntry, AlgoOrderType } from '../shared/types';
 
 /**
  * Main engine tick - called by alarm every few seconds
@@ -201,9 +203,46 @@ async function executeOrder(order: any, executionPrice: number, allOrders: any[]
       allOrders[orderIndex].executionHistory = [...(order.executionHistory || []), execution];
       allOrders[orderIndex].completedAt = Date.now();
       allOrders[orderIndex].clobOrderId = result.orderId;
+
+      // Track algo order execution in history
+      const historyEntry: OrderHistoryEntry = {
+        id: `algo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        orderType: 'ALGO',
+        algoType: order.type as AlgoOrderType,
+        tokenId: order.tokenId,
+        side: order.side,
+        size: order.size,
+        price: executionPrice,
+        executedPrice: executionPrice,
+        status: 'EXECUTED',
+        algoOrderId: order.id,
+        clobOrderId: result.orderId,
+        marketQuestion: order.marketQuestion,
+        outcome: order.outcome
+      };
+      await saveOrderToHistory(historyEntry);
     } else {
       allOrders[orderIndex].status = 'FAILED';
       allOrders[orderIndex].error = result.error || 'Unknown error';
+
+      // Track failed algo order execution
+      const historyEntry: OrderHistoryEntry = {
+        id: `algo-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        timestamp: Date.now(),
+        orderType: 'ALGO',
+        algoType: order.type as AlgoOrderType,
+        tokenId: order.tokenId,
+        side: order.side,
+        size: order.size,
+        price: executionPrice,
+        status: 'FAILED',
+        algoOrderId: order.id,
+        error: result.error || 'Unknown error',
+        marketQuestion: order.marketQuestion,
+        outcome: order.outcome
+      };
+      await saveOrderToHistory(historyEntry);
     }
     allOrders[orderIndex].updatedAt = Date.now();
   }

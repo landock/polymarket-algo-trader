@@ -200,3 +200,24 @@ export interface BuilderSigningResponse {
   POLY_BUILDER_API_KEY: string;
   POLY_BUILDER_PASSPHRASE: string;
 }
+
+/**
+ * Order History Types
+ */
+export interface OrderHistoryEntry {
+  id: string;
+  timestamp: number;
+  orderType: 'MARKET' | 'LIMIT' | 'ALGO';
+  algoType?: AlgoOrderType;
+  tokenId: string;
+  side: OrderSide;
+  size: number;
+  price: number;
+  executedPrice?: number;
+  status: 'PENDING' | 'EXECUTED' | 'FAILED' | 'CANCELLED';
+  marketQuestion?: string;
+  outcome?: string;
+  algoOrderId?: string;
+  clobOrderId?: string;
+  error?: string;
+}

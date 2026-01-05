@@ -58,6 +58,30 @@ npm run type-check
 npm run clean
 ```
 
+## Autonomous Development (Ralph Technique)
+
+This repository includes the **Ralph Wiggum Technique** for autonomous feature development with Claude Code.
+
+### Quick Start
+```bash
+# Review the PRD (Product Requirements Document)
+cat plans/prd.json
+
+# Run autonomous development loop (5 iterations)
+./ralph.sh 5
+
+# Monitor progress
+cat progress.txt
+```
+
+Claude will autonomously:
+1. Select highest priority features from the PRD
+2. Implement them with tests and type checking
+3. Commit each feature to git
+4. Log progress for review
+
+See **[RALPH-TECHNIQUE.md](./RALPH-TECHNIQUE.md)** for full documentation.
+
 ## Architecture
 
 - **Service Worker** (`background/`) - Market monitoring and order execution
