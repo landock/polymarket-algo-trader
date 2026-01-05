@@ -144,6 +144,30 @@ function PopupApp() {
 
         <button
           style={{
+            background: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            width: '100%',
+            marginBottom: '8px'
+          }}
+          data-cy="open-risk-settings"
+          onClick={() => {
+            chrome.windows.create({
+              url: chrome.runtime.getURL('popup/risk-settings.html'),
+              type: 'popup',
+              width: 850,
+              height: 700
+            });
+          }}
+        >
+          Risk Management
+        </button>
+
+        <button
+          style={{
             background: '#f5f5f5',
             color: '#333',
             border: '1px solid #ddd',

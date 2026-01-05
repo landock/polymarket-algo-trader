@@ -273,3 +273,24 @@ export interface PositionBreakdown {
   unrealizedPnL: number;            // Unrealized profit/loss
   unrealizedPnLPercent: number;     // Unrealized P&L as percentage
 }
+
+/**
+ * Risk Management Types
+ */
+export interface RiskSettings {
+  maxPositionSizePerMarket: number;  // Max position size per market (in USD)
+  maxDailyLoss: number;              // Max daily loss limit (in USD)
+  maxTotalExposure: number;          // Max total portfolio exposure (in USD)
+  enableRiskChecks: boolean;         // Enable/disable risk checks
+  updatedAt: number;                 // Last updated timestamp
+}
+
+export interface DailyLossTracking {
+  date: string;                      // YYYY-MM-DD format
+  totalLoss: number;                 // Cumulative loss for the day (positive number = loss)
+  trades: Array<{
+    timestamp: number;
+    pnl: number;                     // Profit (negative) or Loss (positive)
+    orderId: string;
+  }>;
+}

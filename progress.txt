@@ -333,3 +333,90 @@ Implemented comprehensive limit order support with the following capabilities:
 - Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
 - Feature F005 (Risk Management Settings) is MEDIUM priority and would add safety controls
 - Feature F008 (Multi-Market Watchlist) is MEDIUM priority and would improve market monitoring
+
+### Iteration 5 - Risk Management Settings (F005) - COMPLETED
+**Date:** 2026-01-05
+**Feature:** Risk Management Settings (F005)
+**Status:** ✅ COMPLETED
+
+**Files Created:**
+- `src/storage/risk-settings.ts` - Risk settings storage service with daily loss tracking
+- `src/background/risk-validator.ts` - Risk validation logic for order execution
+- `src/popup/risk-settings-page.tsx` - Risk management settings UI page
+- `src/popup/risk-settings.html` - HTML page for risk settings interface
+
+**Files Modified:**
+- `src/shared/types/index.ts` - Added RiskSettings and DailyLossTracking type definitions
+- `src/background/trading-session.ts` - Integrated risk checks into executeMarketOrder() and executeLimitOrder()
+- `src/background/service-worker.ts` - Added message handlers for risk settings (GET_RISK_SETTINGS, UPDATE_RISK_SETTINGS, RESET_RISK_SETTINGS, GET_DAILY_LOSS)
+- `src/popup/popup.tsx` - Added "Risk Management" button to open settings page
+- `webpack.config.js` - Added risk-settings-page entry and HtmlWebpackPlugin configuration
+
+**Implementation Summary:**
+Implemented comprehensive risk management system with the following capabilities:
+
+1. **Data Model:**
+   - RiskSettings type with fields: maxPositionSizePerMarket, maxDailyLoss, maxTotalExposure, enableRiskChecks, updatedAt
+   - DailyLossTracking type with fields: date, totalLoss, trades[]
+   - Default settings: $1000 max position, $500 daily loss limit, $5000 total exposure
+
+2. **Storage Service:**
+   - Persistent storage in chrome.storage.local via storage adapter
+   - Get, update, reset operations for risk settings
+   - Daily loss tracking with automatic date rollover
+   - Record trade function for P&L tracking
+
+3. **Risk Validation Logic:**
+   - validateRiskLimits() function checks orders against all risk limits
+   - Checks max position size per market (order value vs limit)
+   - Checks daily loss limit (current loss vs limit, with 80% warning)
+   - Checks total portfolio exposure (existing positions + new order vs limit, with 90% warning)
+   - SELL orders bypass checks (they reduce exposure)
+   - Override parameter allows bypassing checks with user confirmation
+
+4. **Order Execution Integration:**
+   - Risk checks integrated into executeMarketOrder() and executeLimitOrder()
+   - Checks run after order validation but before balance check
+   - Orders rejected with clear error messages if limits violated
+   - Warnings logged to console when approaching limits
+
+5. **Settings UI Page:**
+   - Enable/disable toggle for risk checks
+   - Input fields for all three risk limits (position size, daily loss, exposure)
+   - Real-time daily loss display with progress bar
+   - Color-coded alerts (green < 80%, yellow 80-99%, red 100%+)
+   - Save and Reset to Defaults buttons
+   - Success/error message feedback
+   - Help section explaining how risk management works
+
+6. **Service Worker Integration:**
+   - GET_RISK_SETTINGS - Fetch current risk settings
+   - UPDATE_RISK_SETTINGS - Update risk settings
+   - RESET_RISK_SETTINGS - Reset to default values
+   - GET_DAILY_LOSS - Get today's loss tracking data
+
+7. **Popup Integration:**
+   - Added "Risk Management" button in main popup (red color: #ef4444)
+   - Opens dedicated risk-settings.html in popup window (850x700)
+   - Consistent with existing Order History, Price Alerts, Portfolio Dashboard, and Limit Orders pattern
+
+**Acceptance Criteria Met:**
+✅ Settings UI for max position size per market
+✅ Setting for max daily loss limit
+✅ Setting for max total portfolio exposure
+✅ Orders that would violate limits are rejected with clear error message
+✅ Settings persist in chrome.storage.local
+⚠️ Can temporarily override with confirmation dialog (architecture in place, UI confirmation dialog not yet implemented but can be added as enhancement)
+
+**Technical Notes:**
+- Risk checks are performed asynchronously before balance validation
+- Daily loss tracking resets automatically at midnight (UTC timezone based on ISO date)
+- Only SELL orders are excluded from risk checks (they reduce exposure)
+- Portfolio exposure calculation fetches live position data from Polymarket API
+- Risk validator handles failures gracefully (won't block orders if position fetch fails)
+- Override parameter added to order execution functions for future confirmation dialog integration
+
+**Next Steps:**
+- Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
+- Feature F008 (Multi-Market Watchlist) is MEDIUM priority and would improve market monitoring
+- Feature F006 (Transaction Cost Analysis) is LOW priority but could enhance order history

@@ -25,6 +25,7 @@ import { validateOrder, validateBalance, formatValidationErrors } from './order-
 import { retryWithBackoff } from './retry-utility';
 import { saveOrderToHistory } from '../storage/order-history';
 import type { OrderHistoryEntry } from '../shared/types';
+import { validateRiskLimits, formatRiskErrors } from './risk-validator';
 
 // Configure axios to use fetch adapter for service worker compatibility
 // Service workers don't have XMLHttpRequest, only Fetch API
@@ -263,7 +264,8 @@ async function getTokenBalance(tokenId: string): Promise<number> {
 export async function executeMarketOrder(
   tokenId: string,
   side: 'BUY' | 'SELL',
-  size: number
+  size: number,
+  overrideRisk: boolean = false
 ): Promise<{ success: boolean; orderId?: string; error?: string }> {
   const session = getActiveTradingSession();
 
@@ -297,6 +299,17 @@ export async function executeMarketOrder(
       const errorMsg = formatValidationErrors(orderValidation.errors);
       console.error('[TradingSession] Order validation failed:', errorMsg);
       return { success: false, error: errorMsg };
+    }
+
+    // Risk management check
+    const riskCheck = await validateRiskLimits(tokenId, side, size, marketPrice, overrideRisk);
+    if (!riskCheck.isValid) {
+      const errorMsg = formatRiskErrors(riskCheck.errors);
+      console.error('[TradingSession] Risk check failed:', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    if (riskCheck.warnings.length > 0) {
+      console.warn('[TradingSession] Risk warnings:', riskCheck.warnings);
     }
 
     // Check balance
@@ -417,7 +430,8 @@ export async function executeLimitOrder(
   tokenId: string,
   side: 'BUY' | 'SELL',
   size: number,
-  price: number
+  price: number,
+  overrideRisk: boolean = false
 ): Promise<{ success: boolean; orderId?: string; error?: string }> {
   const session = getActiveTradingSession();
 
@@ -438,6 +452,17 @@ export async function executeLimitOrder(
       const errorMsg = formatValidationErrors(orderValidation.errors);
       console.error('[TradingSession] Order validation failed:', errorMsg);
       return { success: false, error: errorMsg };
+    }
+
+    // Risk management check
+    const riskCheck = await validateRiskLimits(tokenId, side, size, price, overrideRisk);
+    if (!riskCheck.isValid) {
+      const errorMsg = formatRiskErrors(riskCheck.errors);
+      console.error('[TradingSession] Risk check failed:', errorMsg);
+      return { success: false, error: errorMsg };
+    }
+    if (riskCheck.warnings.length > 0) {
+      console.warn('[TradingSession] Risk warnings:', riskCheck.warnings);
     }
 
     // Check balance
