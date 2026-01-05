@@ -243,3 +243,93 @@ Implemented comprehensive portfolio overview dashboard with the following capabi
 - Feature F007 (Limit Order Support) is HIGH priority and would extend order execution capabilities
 - Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
 - Feature F005 (Risk Management Settings) is MEDIUM priority and would add safety controls
+
+### Iteration 4 - Limit Order Support (F007) - COMPLETED
+**Date:** 2026-01-05
+**Feature:** Limit Order Support (F007)
+**Status:** ✅ COMPLETED
+
+**Files Created:**
+- `src/storage/limit-orders.ts` - Limit order storage service with CRUD operations
+- `src/popup/limit-orders-page.tsx` - Dedicated React UI page for managing limit orders
+- `src/popup/limit-orders.html` - HTML page for limit orders interface
+
+**Files Modified:**
+- `src/background/service-worker.ts` - Added limit order message handlers (CREATE, CANCEL, DELETE, GET)
+- `src/background/algo-engine.ts` - Added limit order monitoring and fill detection
+- `src/background/trading-session.ts` - Already had executeLimitOrder() function (used it)
+- `src/popup/popup.tsx` - Added "Limit Orders" button to open limit orders page
+- `webpack.config.js` - Added limit-orders-page entry and HtmlWebpackPlugin configuration
+
+**Implementation Summary:**
+Implemented comprehensive limit order support with the following capabilities:
+
+1. **Data Model:**
+   - LimitOrder type with fields: id, tokenId, marketQuestion, outcome, side, size, limitPrice, status, createdAt, clobOrderId, filledAt, filledPrice, cancelledAt, error
+   - LimitOrderStatus: PENDING | FILLED | CANCELLED | FAILED
+
+2. **Storage Service:**
+   - Persistent storage in chrome.storage.local via storage adapter
+   - Create, read, update, delete operations for limit orders
+   - Get pending limit orders and active token IDs
+   - Update by CLOB order ID for fill tracking
+
+3. **CLOB Integration:**
+   - Leveraged existing executeLimitOrder() function in trading-session.ts
+   - Orders submitted to Polymarket CLOB with limit price
+   - CLOB order ID tracked for status monitoring
+   - Cancel functionality via CLOB client cancelOrder()
+
+4. **Background Monitoring:**
+   - Integrated into existing algo-engine tick (every 10 seconds)
+   - Fetches pending limit orders and combines token IDs with algo orders
+   - Checks CLOB open orders to detect fills (order not in CLOB = filled)
+   - Updates limit order status to FILLED when detected
+   - Tracks in order history with EXECUTED status
+   - Sends Chrome notifications when orders are filled
+
+5. **Service Worker Integration:**
+   - GET_LIMIT_ORDERS - Fetch all limit orders
+   - GET_PENDING_LIMIT_ORDERS - Fetch pending orders only
+   - CREATE_LIMIT_ORDER - Create and submit new limit order
+   - CANCEL_LIMIT_ORDER - Cancel pending limit order (CLOB + local)
+   - DELETE_LIMIT_ORDER - Delete limit order from storage
+
+6. **UI Component (Limit Orders Page):**
+   - Two tabs: Pending and History
+   - Create limit order form with fields: tokenId, side, size, limitPrice, marketQuestion, outcome
+   - Pending orders section with status badges and action buttons
+   - Cancel button for pending orders
+   - History section showing filled/cancelled/failed orders
+   - Delete button for historical orders
+   - Auto-refresh every 10 seconds
+   - Displays order details: market, outcome, side, size, limit price, total cost
+   - Shows CLOB order ID, creation time, fill time, cancellation time
+   - Error messages for failed orders
+
+7. **Popup Integration:**
+   - Added "Limit Orders" button in main popup (blue color: #3b82f6)
+   - Opens dedicated limit-orders.html in popup window (900x700)
+   - Consistent with existing Order History, Price Alerts, and Portfolio Dashboard pattern
+
+**Acceptance Criteria Met:**
+✅ UI to create limit orders with target price
+✅ Service worker monitors prices and executes when target reached (monitors CLOB for fills)
+✅ Shows pending limit orders in orders view (dedicated page with pending/history tabs)
+✅ Can cancel pending limit orders (via Cancel button, cancels both CLOB and local)
+✅ Integrates with existing order validation and retry logic (uses executeLimitOrder)
+✅ Persists across browser restarts (chrome.storage.local persistence)
+
+**Technical Notes:**
+- Limit orders are submitted immediately to CLOB and tracked locally
+- Fill detection works by checking if CLOB order ID still exists in open orders
+- If order disappears from CLOB, assumed to be filled (notifications sent)
+- Leveraged existing executeLimitOrder() function from trading-session.ts
+- Cancel operation attempts CLOB cancellation first, then updates local storage
+- Order history integration tracks limit orders alongside market and algo orders
+- Chrome notifications alert users when limit orders are filled
+
+**Next Steps:**
+- Feature F002 (CSV Export) is MEDIUM priority and builds on order history implementation
+- Feature F005 (Risk Management Settings) is MEDIUM priority and would add safety controls
+- Feature F008 (Multi-Market Watchlist) is MEDIUM priority and would improve market monitoring

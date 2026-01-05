@@ -10,13 +10,33 @@ import { Buffer } from 'buffer';
 
 import { setupMarketMonitor } from './market-monitor';
 import { tickAlgoEngine } from './algo-engine';
-import { initializeTradingSession, clearTradingSession, executeMarketOrder, getOpenOrders, getWalletAddresses } from './trading-session';
+import { initializeTradingSession, clearTradingSession, executeMarketOrder, executeLimitOrder, getOpenOrders, getWalletAddresses } from './trading-session';
 import { testServiceWorkerDependencies } from './dependency-test';
 import { fetchPositions, clearPositionsCache, refreshPositions } from './positions-fetcher';
 import type { PolymarketPosition } from '../shared/types/positions';
 import { checkPriceAlerts, setupNotificationHandlers } from './alert-monitor';
 import { getPriceAlerts, createPriceAlert, updatePriceAlert, deletePriceAlert, snoozePriceAlert, dismissPriceAlert, getAlertHistory } from '../storage/price-alerts';
 import { fetchPortfolioMetrics } from './portfolio-service';
+import { getLimitOrders, getPendingLimitOrders, createLimitOrder, cancelLimitOrder, deleteLimitOrder } from '../storage/limit-orders';
+import type { LimitOrder } from '../storage/limit-orders';
+
+interface E2EOverrides {
+  walletAddresses?: { eoaAddress: string; proxyAddress: string };
+  positions?: PolymarketPosition[];
+  positionsError?: string;
+  clobOrders?: any[];
+  clobOrdersError?: string;
+}
+
+async function getE2EOverrides(): Promise<E2EOverrides | null> {
+  try {
+    const result = await chrome.storage.local.get('e2e_overrides');
+    return result.e2e_overrides || null;
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to load e2e overrides:', error);
+    return null;
+  }
+}
 
 // Service worker lifecycle
 chrome.runtime.onInstalled.addListener((details) => {
@@ -133,6 +153,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           result = await handleGetPortfolio(message.proxyAddress);
           break;
 
+        case 'GET_LIMIT_ORDERS':
+          result = await handleGetLimitOrders();
+          break;
+
+        case 'GET_PENDING_LIMIT_ORDERS':
+          result = await handleGetPendingLimitOrders();
+          break;
+
+        case 'CREATE_LIMIT_ORDER':
+          result = await handleCreateLimitOrder(message.order);
+          break;
+
+        case 'CANCEL_LIMIT_ORDER':
+          result = await handleCancelLimitOrder(message.orderId);
+          break;
+
+        case 'DELETE_LIMIT_ORDER':
+          result = await handleDeleteLimitOrder(message.orderId);
+          break;
+
         default:
           result = { success: false, error: 'Unknown message type' };
       }
@@ -165,6 +205,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 async function handleInitializeTradingSession(privateKey: string, proxyAddress?: string) {
   try {
+    const overrides = await getE2EOverrides();
+    if (overrides?.walletAddresses) {
+      console.log('[ServiceWorker] Using e2e wallet override');
+      return { success: true };
+    }
+
     await initializeTradingSession(privateKey, proxyAddress);
     console.log('[ServiceWorker] Trading session initialized');
     return { success: true };
@@ -193,6 +239,11 @@ async function handleClearTradingSession() {
  */
 async function handleGetWalletAddresses() {
   try {
+    const overrides = await getE2EOverrides();
+    if (overrides?.walletAddresses) {
+      return { success: true, data: overrides.walletAddresses };
+    }
+
     const addresses = getWalletAddresses();
 
     if (!addresses) {
@@ -370,6 +421,14 @@ async function handleGetAlgoOrders() {
  */
 async function handleGetClobOrders() {
   try {
+    const overrides = await getE2EOverrides();
+    if (overrides?.clobOrdersError) {
+      throw new Error(overrides.clobOrdersError);
+    }
+    if (overrides?.clobOrders) {
+      return { success: true, data: overrides.clobOrders };
+    }
+
     console.log('[ServiceWorker] Fetching CLOB orders');
     const result = await getOpenOrders();
 
@@ -390,6 +449,14 @@ async function handleGetClobOrders() {
  */
 async function handleGetPositions(proxyAddress: string) {
   try {
+    const overrides = await getE2EOverrides();
+    if (overrides?.positionsError) {
+      throw new Error(overrides.positionsError);
+    }
+    if (overrides?.positions) {
+      return { success: true, data: overrides.positions };
+    }
+
     console.log('[ServiceWorker] Fetching positions for:', proxyAddress);
     const positions = await fetchPositions(proxyAddress);
     console.log('[ServiceWorker] Found', positions.length, 'positions');
@@ -405,6 +472,14 @@ async function handleGetPositions(proxyAddress: string) {
  */
 async function handleRefreshPositions(proxyAddress: string) {
   try {
+    const overrides = await getE2EOverrides();
+    if (overrides?.positionsError) {
+      throw new Error(overrides.positionsError);
+    }
+    if (overrides?.positions) {
+      return { success: true, data: overrides.positions };
+    }
+
     console.log('[ServiceWorker] Force refreshing positions for:', proxyAddress);
     const positions = await refreshPositions(proxyAddress);
     console.log('[ServiceWorker] Refreshed', positions.length, 'positions');
@@ -622,6 +697,136 @@ async function handleGetPortfolio(proxyAddress?: string) {
       success: false,
       error: error?.message || 'Failed to fetch portfolio metrics'
     };
+  }
+}
+
+/**
+ * Get all limit orders
+ */
+async function handleGetLimitOrders() {
+  try {
+    const orders = await getLimitOrders();
+    return { success: true, data: orders };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get limit orders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get pending limit orders
+ */
+async function handleGetPendingLimitOrders() {
+  try {
+    const orders = await getPendingLimitOrders();
+    return { success: true, data: orders };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get pending limit orders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new limit order
+ */
+async function handleCreateLimitOrder(order: Omit<LimitOrder, 'id' | 'createdAt' | 'status'>) {
+  try {
+    console.log('[ServiceWorker] Creating limit order:', order);
+
+    // Execute limit order through trading session
+    const result = await executeLimitOrder(
+      order.tokenId,
+      order.side,
+      order.size,
+      order.limitPrice
+    );
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to create limit order');
+    }
+
+    // Create limit order record in storage
+    const limitOrder = await createLimitOrder({
+      tokenId: order.tokenId,
+      marketQuestion: order.marketQuestion,
+      outcome: order.outcome,
+      side: order.side,
+      size: order.size,
+      limitPrice: order.limitPrice,
+      clobOrderId: result.orderId,
+    });
+
+    console.log('[ServiceWorker] Limit order created:', limitOrder.id);
+
+    return { success: true, data: limitOrder };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to create limit order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Cancel a limit order
+ */
+async function handleCancelLimitOrder(orderId: string) {
+  try {
+    console.log('[ServiceWorker] Cancelling limit order:', orderId);
+
+    // Get the limit order to find the CLOB order ID
+    const orders = await getLimitOrders();
+    const order = orders.find(o => o.id === orderId);
+
+    if (!order) {
+      throw new Error('Limit order not found');
+    }
+
+    if (order.status !== 'PENDING') {
+      throw new Error(`Cannot cancel order with status: ${order.status}`);
+    }
+
+    // Cancel on CLOB if we have a CLOB order ID
+    if (order.clobOrderId) {
+      const session = await import('./trading-session');
+      const tradingSession = session.getActiveTradingSession();
+
+      if (tradingSession?.clobClient) {
+        try {
+          await tradingSession.clobClient.cancelOrder({ orderID: order.clobOrderId });
+          console.log('[ServiceWorker] CLOB order cancelled:', order.clobOrderId);
+        } catch (error) {
+          console.error('[ServiceWorker] Failed to cancel CLOB order:', error);
+          // Continue with local cancellation even if CLOB cancel fails
+        }
+      }
+    }
+
+    // Update local storage
+    await cancelLimitOrder(orderId);
+
+    console.log('[ServiceWorker] Limit order cancelled:', orderId);
+
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to cancel limit order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a limit order
+ */
+async function handleDeleteLimitOrder(orderId: string) {
+  try {
+    console.log('[ServiceWorker] Deleting limit order:', orderId);
+
+    await deleteLimitOrder(orderId);
+
+    console.log('[ServiceWorker] Limit order deleted:', orderId);
+
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to delete limit order:', error);
+    throw error;
   }
 }
 

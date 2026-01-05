@@ -8,38 +8,48 @@ import { fetchTokenPrices, getActiveTokenIds } from './market-monitor';
 import { evaluateTrailingStop } from './algo/trailing-stop';
 import { evaluateStopLoss } from './algo/stop-loss';
 import { evaluateTWAP } from './algo/twap';
-import { executeMarketOrder, hasTradingSession } from './trading-session';
+import { executeMarketOrder, hasTradingSession, getOpenOrders } from './trading-session';
 import { saveOrderToHistory, updateOrderHistoryEntry } from '../storage/order-history';
 import type { OrderHistoryEntry, AlgoOrderType } from '../shared/types';
+import { getPendingLimitOrders, updateLimitOrder, getActiveLimitOrderTokenIds } from '../storage/limit-orders';
 
 /**
  * Main engine tick - called by alarm every few seconds
  */
 export async function tickAlgoEngine() {
   try {
-    // Get all active token IDs
-    const tokenIds = await getActiveTokenIds();
+    // Get all active token IDs from algo orders
+    const algoTokenIds = await getActiveTokenIds();
 
-    if (tokenIds.length === 0) {
+    // Get token IDs from pending limit orders
+    const limitOrderTokenIds = await getActiveLimitOrderTokenIds();
+
+    // Combine all unique token IDs
+    const allTokenIds = Array.from(new Set([...algoTokenIds, ...limitOrderTokenIds]));
+
+    if (allTokenIds.length === 0) {
       // No active orders to monitor
       return;
     }
 
-    console.log(`[AlgoEngine] Monitoring ${tokenIds.length} tokens`);
+    console.log(`[AlgoEngine] Monitoring ${allTokenIds.length} tokens (${algoTokenIds.length} algo, ${limitOrderTokenIds.length} limit)`);
 
     // Fetch current prices for all tokens
-    const prices = await fetchTokenPrices(tokenIds);
+    const prices = await fetchTokenPrices(allTokenIds);
 
     console.log(`[AlgoEngine] Fetched prices for ${prices.size} tokens`);
 
-    // Load all orders
+    // Check limit orders first
+    await checkLimitOrders(prices);
+
+    // Load all algo orders
     const result = await chrome.storage.local.get('algo_orders');
     const orders = result.algo_orders || [];
 
     // Filter only ACTIVE orders (not PAUSED)
     const activeOrders = orders.filter((o: any) => o.status === 'ACTIVE');
 
-    console.log(`[AlgoEngine] Evaluating ${activeOrders.length} active orders`);
+    console.log(`[AlgoEngine] Evaluating ${activeOrders.length} active algo orders`);
 
     // Evaluate each order
     for (const order of activeOrders) {
@@ -320,5 +330,67 @@ async function sendNotification(title: string, message: string) {
     });
   } catch (error) {
     console.error('Failed to send notification:', error);
+  }
+}
+
+/**
+ * Check pending limit orders and update their status based on CLOB
+ */
+async function checkLimitOrders(prices: Map<string, any>) {
+  try {
+    // Get pending limit orders
+    const pendingOrders = await getPendingLimitOrders();
+
+    if (pendingOrders.length === 0) {
+      return;
+    }
+
+    console.log(`[AlgoEngine] Checking ${pendingOrders.length} pending limit orders`);
+
+    // Fetch current open orders from CLOB to check fill status
+    const clobResult = await getOpenOrders();
+
+    if (!clobResult.success) {
+      console.warn('[AlgoEngine] Could not fetch CLOB orders to check limit order status');
+      return;
+    }
+
+    const clobOrders = clobResult.data || [];
+    const clobOrderIds = new Set(clobOrders.map((o: any) => o.id));
+
+    // Check each pending limit order
+    for (const order of pendingOrders) {
+      if (!order.clobOrderId) {
+        continue;
+      }
+
+      // If order is not in CLOB anymore, it was likely filled or cancelled
+      if (!clobOrderIds.has(order.clobOrderId)) {
+        console.log(`[AlgoEngine] Limit order ${order.id} not found in CLOB - may be filled`);
+
+        // Mark as filled
+        await updateLimitOrder(order.id, {
+          status: 'FILLED',
+          filledAt: Date.now(),
+          filledPrice: order.limitPrice, // We don't know exact fill price from this check
+        });
+
+        // Track in order history
+        await updateOrderHistoryEntry(order.id, {
+          status: 'EXECUTED',
+          executedPrice: order.limitPrice,
+        });
+
+        // Send notification
+        await sendNotification(
+          'Limit Order Filled',
+          `${order.side} ${order.size} @ $${order.limitPrice.toFixed(4)}\n${order.marketQuestion || order.tokenId}`
+        );
+
+        console.log(`[AlgoEngine] ✅ Limit order filled: ${order.id}`);
+      }
+    }
+  } catch (error) {
+    console.error('[AlgoEngine] Error checking limit orders:', error);
   }
 }

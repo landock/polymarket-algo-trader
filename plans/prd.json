@@ -102,7 +102,7 @@
       "id": "F007",
       "title": "Limit Order Support",
       "priority": "HIGH",
-      "status": "NOT_STARTED",
+      "status": "COMPLETED",
       "description": "Add support for limit orders that execute when market price reaches target",
       "acceptance_criteria": [
         "UI to create limit orders with target price",
@@ -112,7 +112,8 @@
         "Integrates with existing order validation and retry logic",
         "Persists across browser restarts"
       ],
-      "estimated_complexity": "HIGH"
+      "estimated_complexity": "HIGH",
+      "implementation_notes": "Implemented comprehensive limit order system with storage service, CLOB integration, background monitoring, dedicated UI page for managing orders, and Chrome notifications for filled orders."
     },
     {
       "id": "F008",
@@ -163,6 +164,6 @@
       "estimated_complexity": "LOW"
     }
   ],
-  "completed_features": ["F001", "F003", "F004"],
+  "completed_features": ["F001", "F003", "F004", "F007"],
   "notes": "This PRD represents version 1.1.0 feature additions. Claude should work through these iteratively, starting with the highest priority features."
 }

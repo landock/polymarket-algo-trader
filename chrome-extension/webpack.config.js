@@ -15,6 +15,7 @@ module.exports = (env, argv) => {
       'popup/order-history-page': './src/popup/order-history-page.tsx',
       'popup/price-alerts-page': './src/popup/price-alerts-page.tsx',
       'popup/portfolio-dashboard-page': './src/popup/portfolio-dashboard-page.tsx',
+      'popup/limit-orders-page': './src/popup/limit-orders-page.tsx',
     },
     output: {
       path: path.resolve(__dirname, 'build'),
@@ -87,6 +88,11 @@ module.exports = (env, argv) => {
         template: './src/popup/portfolio-dashboard.html',
         filename: 'popup/portfolio-dashboard.html',
         chunks: ['popup/portfolio-dashboard-page'],
+      }),
+      new HtmlWebpackPlugin({
+        template: './src/popup/limit-orders.html',
+        filename: 'popup/limit-orders.html',
+        chunks: ['popup/limit-orders-page'],
       }),
       new CopyWebpackPlugin({
         patterns: [
