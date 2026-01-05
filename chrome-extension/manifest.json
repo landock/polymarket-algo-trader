@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Polymarket Algo Trader",
+  "version": "1.0.0",
+  "description": "Algorithmic trading for Polymarket with trailing stops, TWAP, stop-loss/take-profit, and more",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://polymarket.com/*",
+    "https://clob.polymarket.com/*",
+    "https://gamma-api.polymarket.com/*",
+    "https://data-api.polymarket.com/*",
+    "https://polygon-rpc.com/*",
+    "https://*.alchemy.com/*",
+    "https://*.infura.io/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://polymarket.com/*"],
+      "js": ["vendors.js", "shared.js", "content/inject.js"],
+      "css": ["content/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Polymarket Algo Trader",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "popup/settings.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

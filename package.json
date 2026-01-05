@@ -1,33 +1,17 @@
 {
-  "name": "magic-pk",
-  "version": "0.1.0",
+  "name": "@polymarket-algo-trader/chrome-extension",
+  "version": "1.0.0",
   "private": true,
+  "description": "Polymarket algorithmic trading Chrome extension",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "cd chrome-extension && npm run dev",
+    "build": "cd chrome-extension && npm run build",
+    "type-check": "cd chrome-extension && npm run type-check",
+    "install:extension": "cd chrome-extension && npm install",
+    "clean": "rm -rf chrome-extension/build chrome-extension/node_modules node_modules"
   },
-  "dependencies": {
-    "@polymarket/builder-relayer-client": "^0.0.8",
-    "@polymarket/builder-signing-sdk": "^0.0.8",
-    "@polymarket/clob-client": "^4.22.8",
-    "@tanstack/react-query": "^5.90.10",
-    "ethers": "^5.8.0",
-    "next": "16.0.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "viem": "^2.39.2"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.0.3",
-    "prettier": "^3.6.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }

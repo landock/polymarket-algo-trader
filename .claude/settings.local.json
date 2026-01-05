@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx wrangler secret put:*)",
+      "Bash(npx wrangler deploy)",
+      "Bash(grep:*)",
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:docs.polymarket.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run test:run:*)",
+      "WebFetch(domain:docs.cypress.io)",
+      "WebFetch(domain:vitest.dev)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm run test:extension:*)",
+      "Bash(wc:*)",
+      "Bash(npm ls:*)",
+      "Bash(git tag:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

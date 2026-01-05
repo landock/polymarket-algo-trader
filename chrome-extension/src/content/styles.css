@@ -1,0 +1,102 @@
+/* Content Script Styles for Polymarket Algo Trader */
+
+#polymarket-algo-extension {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+#polymarket-algo-extension * {
+  box-sizing: border-box;
+}
+
+/* Panel Container */
+#polymarket-algo-extension .algo-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Panel Header */
+#polymarket-algo-extension .algo-panel-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+#polymarket-algo-extension .algo-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Panel Body */
+#polymarket-algo-extension .algo-panel-body {
+  padding: 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Buttons */
+#polymarket-algo-extension button {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+#polymarket-algo-extension button:hover {
+  background: #5568d3;
+}
+
+#polymarket-algo-extension button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Forms */
+#polymarket-algo-extension input,
+#polymarket-algo-extension select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+#polymarket-algo-extension input:focus,
+#polymarket-algo-extension select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Scrollbar Styling */
+#polymarket-algo-extension .algo-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+#polymarket-algo-extension .algo-panel-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#polymarket-algo-extension .algo-panel-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+#polymarket-algo-extension .algo-panel-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

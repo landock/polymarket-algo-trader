@@ -1,0 +1,463 @@
+/**
+ * Background Service Worker
+ *
+ * Handles 24/7 market monitoring and algorithmic order execution
+ */
+
+// Polyfill Buffer for service worker (needed by ethers.js and CLOB client)
+import { Buffer } from 'buffer';
+(globalThis as any).Buffer = Buffer;
+
+import { setupMarketMonitor } from './market-monitor';
+import { tickAlgoEngine } from './algo-engine';
+import { initializeTradingSession, clearTradingSession, executeMarketOrder, getOpenOrders, getWalletAddresses } from './trading-session';
+import { testServiceWorkerDependencies } from './dependency-test';
+import { fetchPositions, clearPositionsCache, refreshPositions } from './positions-fetcher';
+import type { PolymarketPosition } from '../shared/types/positions';
+
+// Service worker lifecycle
+chrome.runtime.onInstalled.addListener((details) => {
+  console.log('Polymarket Algo Trader installed', details.reason);
+
+  // Set up market monitoring (every 10 seconds)
+  setupMarketMonitor(10);
+});
+
+// Handle alarms
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'market-monitor') {
+    console.log('[ServiceWorker] Market monitor tick');
+    await tickAlgoEngine();
+  }
+});
+
+// Handle messages from content script/popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Received message:', message);
+
+  // Wrap async operations in an immediately invoked async function
+  (async () => {
+    try {
+      let result;
+
+      switch (message.type) {
+        case 'INITIALIZE_TRADING_SESSION':
+          result = await handleInitializeTradingSession(message.privateKey, message.proxyAddress);
+          break;
+
+        case 'CLEAR_TRADING_SESSION':
+          result = await handleClearTradingSession();
+          break;
+
+        case 'GET_WALLET_ADDRESSES':
+          result = await handleGetWalletAddresses();
+          break;
+
+        case 'CREATE_ALGO_ORDER':
+          result = await handleCreateAlgoOrder(message.order);
+          break;
+
+        case 'PAUSE_ALGO_ORDER':
+          result = await handlePauseAlgoOrder(message.orderId);
+          break;
+
+        case 'RESUME_ALGO_ORDER':
+          result = await handleResumeAlgoOrder(message.orderId);
+          break;
+
+        case 'CANCEL_ALGO_ORDER':
+          result = await handleCancelAlgoOrder(message.orderId);
+          break;
+
+        case 'GET_ALGO_ORDERS':
+          result = await handleGetAlgoOrders();
+          break;
+
+        case 'GET_CLOB_ORDERS':
+          result = await handleGetClobOrders();
+          break;
+
+        case 'GET_POSITIONS':
+          result = await handleGetPositions(message.proxyAddress);
+          break;
+
+        case 'REFRESH_POSITIONS':
+          result = await handleRefreshPositions(message.proxyAddress);
+          break;
+
+        case 'QUICK_SELL_POSITION':
+          result = await handleQuickSellPosition(message.position);
+          break;
+
+        case 'REDEEM_POSITION':
+          result = await handleRedeemPosition(message.position);
+          break;
+
+        default:
+          result = { success: false, error: 'Unknown message type' };
+      }
+
+      // Try to send response, catch if channel closed
+      try {
+        sendResponse(result);
+      } catch (sendError) {
+        console.error('[ServiceWorker] Failed to send response (channel may be closed):', sendError);
+      }
+    } catch (error: any) {
+      console.error('[ServiceWorker] Message handler error:', error);
+      // Try to send error response, catch if channel closed
+      try {
+        sendResponse({
+          success: false,
+          error: error?.message || String(error) || 'Unknown error'
+        });
+      } catch (sendError) {
+        console.error('[ServiceWorker] Failed to send error response (channel may be closed):', sendError);
+      }
+    }
+  })();
+
+  return true; // Keep message channel open for async response
+});
+
+/**
+ * Initialize trading session with decrypted private key
+ */
+async function handleInitializeTradingSession(privateKey: string, proxyAddress?: string) {
+  try {
+    await initializeTradingSession(privateKey, proxyAddress);
+    console.log('[ServiceWorker] Trading session initialized');
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to initialize trading session:', error);
+    throw error;
+  }
+}
+
+/**
+ * Clear the trading session
+ */
+async function handleClearTradingSession() {
+  try {
+    clearTradingSession();
+    console.log('[ServiceWorker] Trading session cleared');
+    return { success: true };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to clear trading session:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get wallet addresses (EOA and proxy)
+ */
+async function handleGetWalletAddresses() {
+  try {
+    const addresses = getWalletAddresses();
+
+    if (!addresses) {
+      return { success: false, error: 'No active trading session' };
+    }
+
+    console.log('[ServiceWorker] Wallet addresses:', addresses);
+    return { success: true, data: addresses };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get wallet addresses:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new algorithmic order
+ */
+async function handleCreateAlgoOrder(orderData: any) {
+  try {
+    // Generate unique order ID
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+    // Create AlgoOrder object
+    const algoOrder: any = {
+      id: orderId,
+      type: orderData.type,
+      status: 'ACTIVE',
+      tokenId: orderData.tokenId,
+      side: orderData.side,
+      size: orderData.size,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      params: {},
+      executionHistory: []
+    };
+
+    // Add type-specific parameters
+    if (orderData.type === 'TRAILING_STOP') {
+      algoOrder.params = {
+        trailPercent: orderData.trailPercent,
+        triggerPrice: orderData.triggerPrice
+      };
+    } else if (orderData.type === 'STOP_LOSS' || orderData.type === 'TAKE_PROFIT') {
+      algoOrder.params = {
+        stopLossPrice: orderData.stopLossPrice,
+        takeProfitPrice: orderData.takeProfitPrice
+      };
+    } else if (orderData.type === 'TWAP') {
+      algoOrder.params = {
+        totalSize: orderData.size,
+        durationMinutes: orderData.durationMinutes,
+        intervalMinutes: orderData.intervalMinutes,
+        startTime: Date.now()
+      };
+      algoOrder.executedSize = 0;
+    }
+
+    // Load existing orders
+    const result = await chrome.storage.local.get('algo_orders');
+    const orders = result.algo_orders || [];
+
+    // Add new order
+    orders.push(algoOrder);
+
+    // Save back to storage
+    await chrome.storage.local.set({ algo_orders: orders });
+
+    console.log('Algo order created:', orderId, algoOrder);
+
+    return { success: true, orderId, order: algoOrder };
+  } catch (error) {
+    console.error('Failed to create algo order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Pause an active algorithmic order
+ */
+async function handlePauseAlgoOrder(orderId: string) {
+  try {
+    const result = await chrome.storage.local.get('algo_orders');
+    const orders = result.algo_orders || [];
+
+    const orderIndex = orders.findIndex((o: any) => o.id === orderId);
+    if (orderIndex === -1) {
+      throw new Error('Order not found');
+    }
+
+    orders[orderIndex].status = 'PAUSED';
+    orders[orderIndex].updatedAt = Date.now();
+
+    await chrome.storage.local.set({ algo_orders: orders });
+
+    console.log('Algo order paused:', orderId);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to pause algo order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Resume a paused algorithmic order
+ */
+async function handleResumeAlgoOrder(orderId: string) {
+  try {
+    const result = await chrome.storage.local.get('algo_orders');
+    const orders = result.algo_orders || [];
+
+    const orderIndex = orders.findIndex((o: any) => o.id === orderId);
+    if (orderIndex === -1) {
+      throw new Error('Order not found');
+    }
+
+    orders[orderIndex].status = 'ACTIVE';
+    orders[orderIndex].updatedAt = Date.now();
+
+    await chrome.storage.local.set({ algo_orders: orders });
+
+    console.log('Algo order resumed:', orderId);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to resume algo order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Cancel an algorithmic order
+ */
+async function handleCancelAlgoOrder(orderId: string) {
+  try {
+    const result = await chrome.storage.local.get('algo_orders');
+    const orders = result.algo_orders || [];
+
+    const orderIndex = orders.findIndex((o: any) => o.id === orderId);
+    if (orderIndex === -1) {
+      throw new Error('Order not found');
+    }
+
+    orders[orderIndex].status = 'CANCELLED';
+    orders[orderIndex].updatedAt = Date.now();
+
+    await chrome.storage.local.set({ algo_orders: orders });
+
+    console.log('Algo order cancelled:', orderId);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to cancel algo order:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all algorithmic orders
+ */
+async function handleGetAlgoOrders() {
+  try {
+    const result = await chrome.storage.local.get('algo_orders');
+    const orders = result.algo_orders || [];
+
+    return { success: true, data: orders };
+  } catch (error) {
+    console.error('Failed to get algo orders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get real orders from Polymarket CLOB
+ */
+async function handleGetClobOrders() {
+  try {
+    console.log('[ServiceWorker] Fetching CLOB orders');
+    const result = await getOpenOrders();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch CLOB orders');
+    }
+
+    console.log('[ServiceWorker] Found', result.data?.length || 0, 'CLOB orders');
+    return { success: true, data: result.data || [] };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get CLOB orders:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get user positions from Polymarket Data API
+ */
+async function handleGetPositions(proxyAddress: string) {
+  try {
+    console.log('[ServiceWorker] Fetching positions for:', proxyAddress);
+    const positions = await fetchPositions(proxyAddress);
+    console.log('[ServiceWorker] Found', positions.length, 'positions');
+    return { success: true, data: positions };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to get positions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Force refresh positions (bypass cache)
+ */
+async function handleRefreshPositions(proxyAddress: string) {
+  try {
+    console.log('[ServiceWorker] Force refreshing positions for:', proxyAddress);
+    const positions = await refreshPositions(proxyAddress);
+    console.log('[ServiceWorker] Refreshed', positions.length, 'positions');
+    return { success: true, data: positions };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to refresh positions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Quick sell a position (immediate market sell)
+ */
+async function handleQuickSellPosition(position: PolymarketPosition) {
+  try {
+    console.log('[ServiceWorker] Quick selling position:', position.title, position.outcome);
+
+    // Execute market sell order
+    const result = await executeMarketOrder(
+      position.asset,
+      'SELL',
+      position.size
+    );
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to execute sell order');
+    }
+
+    // Clear positions cache to force refresh
+    await clearPositionsCache();
+
+    console.log('[ServiceWorker] Position sold successfully, order ID:', result.orderId);
+    return { success: true, orderId: result.orderId };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to sell position:', error);
+    throw error;
+  }
+}
+
+/**
+ * Redeem a resolved position
+ */
+async function handleRedeemPosition(position: PolymarketPosition) {
+  try {
+    console.log('[ServiceWorker] Redeeming position:', position.title, position.outcome);
+
+    // TODO: Implement CTF contract interaction for redemption
+    // This requires:
+    // 1. Get trading session
+    // 2. Call redeemPositions() on CTF Exchange contract
+    // 3. Wait for transaction confirmation
+    // For now, return a placeholder response
+
+    console.warn('[ServiceWorker] ⚠️ Redeem functionality not yet implemented');
+    return {
+      success: false,
+      error: 'Redeem functionality coming soon. Please use Polymarket.com to redeem for now.'
+    };
+
+    // Future implementation:
+    // const session = getActiveTradingSession();
+    // if (!session) throw new Error('No active trading session');
+    //
+    // const txHash = await redeemConditionalTokens(
+    //   position.conditionId,
+    //   position.size,
+    //   position.outcomeIndex,
+    //   session
+    // );
+    //
+    // await clearPositionsCache();
+    // return { success: true, txHash };
+  } catch (error) {
+    console.error('[ServiceWorker] Failed to redeem position:', error);
+    throw error;
+  }
+}
+
+// Graceful shutdown
+chrome.runtime.onSuspend.addListener(() => {
+  console.log('Service worker suspending - saving state');
+  // TODO: Save any in-memory state before shutdown
+});
+
+// Log that service worker is active
+console.log('Polymarket Algo Trader service worker active');
+
+// Run dependency test on startup (in development)
+if (chrome.runtime.getManifest().version) {
+  setTimeout(() => {
+    console.log('\n🔍 Running automatic dependency check...\n');
+    testServiceWorkerDependencies().catch(err => {
+      console.error('Dependency test failed:', err);
+    });
+  }, 1000); // Delay 1 second to let other modules load
+}
