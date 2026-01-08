@@ -17,6 +17,9 @@ export default function ClobOrdersList() {
   const intervalRef = React.useRef<number | null>(null);
   const reloadTimeoutRef = React.useRef<number | null>(null);
 
+  const isE2EContextInvalidated = () =>
+    document?.documentElement?.getAttribute('data-e2e-context-invalidated') === '1';
+
   useEffect(() => {
     if (isE2EContextInvalidated()) {
       setError('Extension was reloaded. Please refresh this page.');
@@ -60,9 +63,6 @@ export default function ClobOrdersList() {
       reloadTimeoutRef.current = null;
     }
   };
-
-  const isE2EContextInvalidated = () =>
-    document?.documentElement?.getAttribute('data-e2e-context-invalidated') === '1';
 
   const loadOrders = async () => {
     if (isE2EContextInvalidated()) {
