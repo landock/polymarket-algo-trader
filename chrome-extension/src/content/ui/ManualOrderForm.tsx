@@ -5,8 +5,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Side } from '@polymarket/clob-client';
 import type { CreateLimitOrderRequest, CreateMarketOrderRequest } from '../../shared/types';
 import type { MarketContext } from '../hooks/useMarketContext';
+import usePolygonBalances from '../../shared/hooks/usePolygonBalances';
+import { useTrading } from '../../shared/providers/TradingProvider';
 
 interface ManualOrderFormProps {
   onExecuteMarket: (order: CreateMarketOrderRequest) => Promise<{ success: boolean; orderId?: string; error?: string }>;
@@ -21,6 +24,9 @@ export default function ManualOrderForm({
   onCreateLimit,
   marketContext,
 }: ManualOrderFormProps) {
+  const { eoaAddress, clobClient } = useTrading();
+  const { formattedUsdcBalance, isLoading: isBalanceLoading } =
+    usePolygonBalances(eoaAddress ?? null);
   const [orderType, setOrderType] = useState<ManualOrderType>('MARKET');
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [size, setSize] = useState('');
@@ -28,6 +34,7 @@ export default function ManualOrderForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedOutcomeIndex, setSelectedOutcomeIndex] = useState(0);
+  const [outcomePrices, setOutcomePrices] = useState<Record<string, number>>({});
 
   const options = marketContext?.options ?? [];
   const selectedOption = options[selectedOutcomeIndex];
@@ -41,6 +48,59 @@ export default function ManualOrderForm({
   useEffect(() => {
     setSelectedOutcomeIndex(0);
   }, [options.length]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!clobClient || options.length === 0) {
+      setOutcomePrices({});
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const loadPrices = async () => {
+      const entries = await Promise.all(
+        options.map(async (option) => {
+          try {
+            const response = await clobClient.getPrice(option.tokenId, Side.BUY);
+            const price = parseFloat(response.price);
+            if (Number.isFinite(price) && price > 0 && price < 1) {
+              return [option.tokenId, price] as const;
+            }
+          } catch {
+            return null;
+          }
+          return null;
+        })
+      );
+
+      if (!isMounted) {
+        return;
+      }
+
+      const next: Record<string, number> = {};
+      for (const entry of entries) {
+        if (entry) {
+          next[entry[0]] = entry[1];
+        }
+      }
+      setOutcomePrices(next);
+    };
+
+    loadPrices();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [clobClient, options]);
+
+  const formatPriceCents = (price?: number) => {
+    if (!price) {
+      return null;
+    }
+    return `${Math.round(price * 100)}¢`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,56 +157,75 @@ export default function ManualOrderForm({
 
   return (
     <div className="manual-order-form" data-cy="manual-order-form">
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-        <button
-          type="button"
-          onClick={() => setOrderType('MARKET')}
-          data-cy="manual-order-market-tab"
-          style={{
-            flex: 1,
-            padding: '8px 12px',
-            borderRadius: '8px',
-            fontSize: '11px',
-            fontFamily: 'IBM Plex Mono, monospace',
-            textTransform: 'uppercase',
-            letterSpacing: '0.2em',
-            background: orderType === 'MARKET' ? '#1f2a33' : '#f6f0e6',
-            color: orderType === 'MARKET' ? '#fbf9f6' : '#7a5a3a',
-            border: orderType === 'MARKET' ? '1px solid #1f2a33' : '1px solid #d7c7ab',
-            cursor: 'pointer'
-          }}
-        >
-          Market
-        </button>
-        <button
-          type="button"
-          onClick={() => setOrderType('LIMIT')}
-          data-cy="manual-order-limit-tab"
-          style={{
-            flex: 1,
-            padding: '8px 12px',
-            borderRadius: '8px',
-            fontSize: '11px',
-            fontFamily: 'IBM Plex Mono, monospace',
-            textTransform: 'uppercase',
-            letterSpacing: '0.2em',
-            background: orderType === 'LIMIT' ? '#1f2a33' : '#f6f0e6',
-            color: orderType === 'LIMIT' ? '#fbf9f6' : '#7a5a3a',
-            border: orderType === 'LIMIT' ? '1px solid #1f2a33' : '1px solid #d7c7ab',
-            cursor: 'pointer'
-          }}
-        >
-          Limit
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            type="button"
+            onClick={() => setSide('BUY')}
+            data-cy="manual-side-buy-tab"
+            style={{
+              padding: '0 0 6px',
+              border: 'none',
+              borderBottom: side === 'BUY' ? '2px solid #1f2a33' : '2px solid transparent',
+              background: 'transparent',
+              fontSize: '16px',
+              fontWeight: 700,
+              color: side === 'BUY' ? '#1f2a33' : '#9ca3af',
+              cursor: 'pointer'
+            }}
+          >
+            Buy
+          </button>
+          <button
+            type="button"
+            onClick={() => setSide('SELL')}
+            data-cy="manual-side-sell-tab"
+            style={{
+              padding: '0 0 6px',
+              border: 'none',
+              borderBottom: side === 'SELL' ? '2px solid #1f2a33' : '2px solid transparent',
+              background: 'transparent',
+              fontSize: '16px',
+              fontWeight: 700,
+              color: side === 'SELL' ? '#1f2a33' : '#9ca3af',
+              cursor: 'pointer'
+            }}
+          >
+            Sell
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+          <label style={{ fontSize: '11px', fontWeight: 600, color: '#6b7280' }}>
+            Order
+          </label>
+          <select
+            value={orderType}
+            onChange={(event) => setOrderType(event.target.value as ManualOrderType)}
+            data-cy="manual-order-type"
+            disabled={isSubmitting}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '8px',
+              border: '1px solid #e2dbd1',
+              background: '#fbf9f6',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#1f2a33'
+            }}
+          >
+            <option value="MARKET">Market</option>
+            <option value="LIMIT">Limit</option>
+          </select>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
-        {options.length > 1 && (
+        {options.length > 0 && (
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 600, color: '#1f2a33' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 600, color: '#1f2a33' }}>
               Outcome
             </label>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               {options.map((option, index) => (
                 <button
                   key={option.tokenId}
@@ -155,17 +234,22 @@ export default function ManualOrderForm({
                   data-cy={`manual-outcome-${index}`}
                   style={{
                     flex: 1,
-                    padding: '6px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    background: selectedOutcomeIndex === index ? '#1f2a33' : '#f6f0e6',
-                    color: selectedOutcomeIndex === index ? '#fbf9f6' : '#7a5a3a',
-                    border: selectedOutcomeIndex === index ? '1px solid #1f2a33' : '1px solid #d7c7ab',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    background: selectedOutcomeIndex === index ? '#1f2a33' : '#f3f4f6',
+                    color: selectedOutcomeIndex === index ? '#fbf9f6' : '#9ca3af',
+                    border: selectedOutcomeIndex === index ? '1px solid #1f2a33' : '1px solid transparent',
                     cursor: 'pointer'
                   }}
                 >
-                  {option.outcome || `Option ${index + 1}`}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <span>{option.outcome || `Option ${index + 1}`}</span>
+                    {formatPriceCents(outcomePrices[option.tokenId]) && (
+                      <span>{formatPriceCents(outcomePrices[option.tokenId])}</span>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
@@ -189,66 +273,31 @@ export default function ManualOrderForm({
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 600, color: '#1f2a33' }}>
-              Side
-            </label>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => setSide('BUY')}
-                data-cy="manual-side-buy"
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  background: side === 'BUY' ? '#7b8f5a' : 'transparent',
-                  color: side === 'BUY' ? '#ffffff' : '#7b8f5a',
-                  border: `1px solid #7b8f5a`,
-                  cursor: 'pointer'
-                }}
-              >
-                BUY
-              </button>
-              <button
-                type="button"
-                onClick={() => setSide('SELL')}
-                data-cy="manual-side-sell"
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  background: side === 'SELL' ? '#b24b4b' : 'transparent',
-                  color: side === 'SELL' ? '#ffffff' : '#b24b4b',
-                  border: `1px solid #b24b4b`,
-                  cursor: 'pointer'
-                }}
-              >
-                SELL
-              </button>
+        <div style={{ marginBottom: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#1f2a33' }}>
+                Amount
+              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                Balance {isBalanceLoading ? '--' : `$${formattedUsdcBalance}`}
+              </div>
+            </div>
+            <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+              Shares
             </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 600, color: '#1f2a33' }}>
-              Size
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={size}
-              onChange={(e) => setSize(e.target.value)}
-              placeholder="0.00"
-              data-cy="manual-size"
-              disabled={isSubmitting}
-              style={{ width: '100%' }}
-            />
-          </div>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            placeholder="0.00"
+            data-cy="manual-size"
+            disabled={isSubmitting}
+            style={{ width: '100%', fontSize: '16px', fontWeight: 600 }}
+          />
         </div>
 
         {orderType === 'LIMIT' && (

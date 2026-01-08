@@ -55,7 +55,7 @@ test("validates manual order inputs", async () => {
     "Size must be greater than 0"
   );
 
-  await page.click("[data-cy=manual-order-limit-tab]");
+  await page.selectOption("[data-cy=manual-order-type]", "LIMIT");
   await page.fill("[data-cy=manual-size]", "1");
   await page.click("[data-cy=manual-submit]");
   await expect(page.locator("[data-cy=manual-order-error]")).toContainText(
