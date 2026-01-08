@@ -18,6 +18,13 @@ export default function ClobOrdersList() {
   const reloadTimeoutRef = React.useRef<number | null>(null);
 
   useEffect(() => {
+    if (isE2EContextInvalidated()) {
+      setError('Extension was reloaded. Please refresh this page.');
+      setContextInvalidated(true);
+      scheduleAutoReload();
+      return;
+    }
+
     loadOrders();
     // Refresh every 10 seconds
     intervalRef.current = window.setInterval(loadOrders, 10000);
