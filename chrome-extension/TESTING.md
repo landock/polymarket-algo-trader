@@ -187,7 +187,7 @@ While manual testing is important for Chrome extensions, we also have:
 ### Unit Tests (Vitest)
 ```bash
 cd /Users/michael.easley/Repos/magic-proxy-builder-example
-npm run test:run -- tests/chrome-extension/
+bun run test:run -- tests/chrome-extension/
 ```
 
 Tests cover:
@@ -197,20 +197,22 @@ Tests cover:
 - Balance checking
 - Error handling
 
-### E2E Tests (Cypress)
+### E2E Tests (Playwright)
 ```bash
-npm run build
-npm run test:e2e
+bun run build
+bun run test:e2e
 ```
 
 Optional UI mode:
 ```bash
-npm run test:e2e:ui
+bun run test:e2e:ui
 ```
 
 Notes:
 - Playwright loads the unpacked extension from `build/`.
 - Use `HEADLESS=1` if you want headless mode.
+- E2E tests can set `e2e_overrides` in `chrome.storage.local` to stub
+  wallet addresses, positions, or CLOB orders without hitting live APIs.
 
 ## Troubleshooting
 

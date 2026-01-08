@@ -134,7 +134,7 @@ Edit the prompt in `ralph.sh` to change Claude's behavior:
 ## Safety Features
 
 1. **Git Commits**: Each feature is committed separately, easy to rollback
-2. **Type Checking**: Runs `npm run type-check` before committing
+2. **Type Checking**: Runs `bun run type-check` before committing
 3. **Progress Logging**: Full audit trail in `progress.txt`
 4. **Max Iterations**: Prevents infinite loops
 5. **Explicit Completion**: Requires `<promise>COMPLETE</promise>` to exit
@@ -182,7 +182,7 @@ git log --oneline -5
 cat progress.txt
 
 # 4. Test the extension
-npm run build
+bun run build
 # Load in Chrome and test manually
 
 # 5. Continue if more work needed
@@ -197,7 +197,7 @@ git push origin main
 ### "Command not found: claude"
 Install Claude Code CLI:
 ```bash
-npm install -g @anthropic-ai/claude-code
+bun add -g @anthropic-ai/claude-code
 ```
 
 ### "Permission denied: ./ralph.sh"

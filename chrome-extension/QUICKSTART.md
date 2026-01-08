@@ -5,7 +5,7 @@
 ### 1. Build the Extension
 ```bash
 cd chrome-extension
-npm run build
+bun run build
 ```
 
 ### 2. Load in Chrome
@@ -59,7 +59,7 @@ When you create an order, you should see:
 
 ### Extension Won't Load
 - Check that `build/` folder exists
-- Rebuild: `npm run build`
+- Rebuild: `bun run build`
 - Check for syntax errors in build output
 
 ### Service Worker Not Starting
@@ -107,7 +107,7 @@ For comprehensive testing, see: **[TESTING.md](./TESTING.md)**
 Run automated tests:
 ```bash
 cd /Users/michael.easley/Repos/magic-proxy-builder-example
-npm run test:run -- tests/chrome-extension/
+bun run test:run -- tests/chrome-extension/
 ```
 
 Expected output:

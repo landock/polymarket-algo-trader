@@ -21,12 +21,12 @@ Chrome extension for algorithmic trading on Polymarket with trailing stops, stop
 
 1. Install dependencies:
    ```bash
-   npm run install:extension
+   bun run install:extension
    ```
 
 2. Build the extension:
    ```bash
-   npm run build
+   bun run build
    ```
 
 3. Load in Chrome:
@@ -46,16 +46,16 @@ See the `/chrome-extension/` directory for detailed documentation:
 
 ```bash
 # Watch mode with auto-rebuild
-npm run dev
+bun run dev
 
 # Production build
-npm run build
+bun run build
 
 # TypeScript validation
-npm run type-check
+bun run type-check
 
 # Clean build artifacts
-npm run clean
+bun run clean
 ```
 
 ## Autonomous Development (Ralph Technique)

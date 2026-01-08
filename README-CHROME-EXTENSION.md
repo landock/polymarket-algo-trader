@@ -42,16 +42,16 @@ This is a monorepo containing:
 
 ### Prerequisites
 - Node.js >= 18.0.0
-- npm >= 9.0.0
+- bun >= 1.3.5
 
 ### 1. Install Dependencies
 
 ```bash
 # Install all workspace dependencies
-npm install
+bun install
 
 # Or install individually
-cd chrome-extension && npm install
+cd chrome-extension && bun install
 ```
 
 ### 2. Build Extension
@@ -60,10 +60,10 @@ cd chrome-extension && npm install
 cd chrome-extension
 
 # Development build (with source maps and watch mode)
-npm run dev
+bun run dev
 
 # Production build
-npm run build
+bun run build
 ```
 
 The build output will be in `chrome-extension/build/`.
@@ -388,7 +388,7 @@ The service worker runs in the background (even when Polymarket tab is closed):
 ### Working on Extension
 ```bash
 cd chrome-extension
-npm run dev  # Watches for changes and rebuilds
+bun run dev  # Watches for changes and rebuilds
 ```
 
 After making changes, click the reload icon in `chrome://extensions/` to reload the extension.
@@ -396,16 +396,16 @@ After making changes, click the reload icon in `chrome://extensions/` to reload 
 ### Working on Worker
 ```bash
 cd serverless/cloudflare-worker
-npm run dev  # Runs local development server
+bun run dev  # Runs local development server
 ```
 
 ### Type Checking
 ```bash
 # Check all workspaces
-npm run type-check
+bun run type-check
 
 # Check individual workspace
-cd chrome-extension && npm run type-check
+cd chrome-extension && bun run type-check
 ```
 
 ## Technical Reference
@@ -805,7 +805,7 @@ Execute Orders ─────────────────────�
 
 ### ✅ Completed
 - [x] **Phase 1: Infrastructure**
-  - [x] Project structure with npm workspaces
+  - [x] Project structure with workspaces
   - [x] Cloudflare Worker signing service
   - [x] Chrome extension manifest and build system (Manifest V3)
   - [x] Storage abstraction layer (chrome.storage)
