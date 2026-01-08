@@ -20,3 +20,5 @@
 
 # Misc
 .prettierrc
+.cursor/
+.codex/
