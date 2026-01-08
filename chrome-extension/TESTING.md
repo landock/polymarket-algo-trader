@@ -210,6 +210,7 @@ bun run test:e2e:ui
 
 Notes:
 - Playwright loads the unpacked extension from `build/`.
+- `bunx playwright` can hang on some setups; use `bun run test:e2e` (Node CLI) instead.
 - Use `HEADLESS=1` if you want headless mode.
 - E2E tests can set `e2e_overrides` in `chrome.storage.local` to stub
   wallet addresses, positions, or CLOB orders without hitting live APIs.
