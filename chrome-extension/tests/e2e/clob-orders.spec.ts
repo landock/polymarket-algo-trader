@@ -56,6 +56,7 @@ test("shows unlock prompt when no active trading session", async () => {
   const page = await context.newPage();
   await page.goto("https://polymarket.com/");
 
+  await unlockWallet(page);
   await expect(
     page.locator("[data-cy=clob-orders-session-required]")
   ).toBeVisible();
@@ -70,6 +71,7 @@ test("shows error when CLOB orders fetch fails", async () => {
   const page = await context.newPage();
   await page.goto("https://polymarket.com/");
 
+  await unlockWallet(page);
   await expect(page.locator("[data-cy=clob-orders-error]")).toBeVisible();
   await expect(page.locator("[data-cy=clob-orders-error]")).toContainText(
     "CLOB unavailable"

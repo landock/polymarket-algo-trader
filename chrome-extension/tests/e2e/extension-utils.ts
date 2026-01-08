@@ -12,6 +12,8 @@ const extensionPath = path.resolve(__dirname, "..", "..", "build");
 const serviceWorkerTimeoutMs = Number(
   process.env.PW_SW_TIMEOUT_MS ?? "15000"
 );
+const viewportWidth = Number(process.env.PW_VIEWPORT_WIDTH ?? "1400");
+const viewportHeight = Number(process.env.PW_VIEWPORT_HEIGHT ?? "2000");
 
 export async function launchExtensionContext(): Promise<BrowserContext> {
   if (!fs.existsSync(extensionPath)) {
@@ -24,6 +26,10 @@ export async function launchExtensionContext(): Promise<BrowserContext> {
   return chromium.launchPersistentContext(userDataDir, {
     timeout: 30_000,
     headless: process.env.HEADLESS === "1",
+    viewport: {
+      width: viewportWidth,
+      height: viewportHeight,
+    },
     args: [
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`,
