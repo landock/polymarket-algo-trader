@@ -48,3 +48,30 @@ test("renders CLOB orders from service worker response", async () => {
   await expect(page.locator("[data-cy=clob-orders-list]")).toBeVisible();
   await expect(page.locator("[data-cy=clob-order-clob-1]")).toBeVisible();
 });
+
+test("shows unlock prompt when no active trading session", async () => {
+  await clearExtensionStorage(context);
+  await setE2EOverrides(context, {});
+
+  const page = await context.newPage();
+  await page.goto("https://polymarket.com/");
+
+  await expect(
+    page.locator("[data-cy=clob-orders-session-required]")
+  ).toBeVisible();
+});
+
+test("shows error when CLOB orders fetch fails", async () => {
+  await clearExtensionStorage(context);
+  await setE2EOverrides(context, {
+    clobOrdersError: "CLOB unavailable",
+  });
+
+  const page = await context.newPage();
+  await page.goto("https://polymarket.com/");
+
+  await expect(page.locator("[data-cy=clob-orders-error]")).toBeVisible();
+  await expect(page.locator("[data-cy=clob-orders-error]")).toContainText(
+    "CLOB unavailable"
+  );
+});

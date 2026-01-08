@@ -184,10 +184,10 @@ getTokenBalance('0xtoken123')  // Should return token balance
 
 While manual testing is important for Chrome extensions, we also have:
 
-### Unit Tests (Vitest)
+### Unit Tests (Bun)
 ```bash
-cd /Users/michael.easley/Repos/magic-proxy-builder-example
-bun run test:run -- tests/chrome-extension/
+cd /Users/michael.easley/Repos/magic-proxy-builder-example/chrome-extension
+bun test tests/unit
 ```
 
 Tests cover:

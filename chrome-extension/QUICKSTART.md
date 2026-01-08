@@ -106,8 +106,8 @@ For comprehensive testing, see: **[TESTING.md](./TESTING.md)**
 
 Run automated tests:
 ```bash
-cd /Users/michael.easley/Repos/magic-proxy-builder-example
-bun run test:run -- tests/chrome-extension/
+cd /Users/michael.easley/Repos/magic-proxy-builder-example/chrome-extension
+bun test tests/unit
 ```
 
 Expected output:
