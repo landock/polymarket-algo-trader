@@ -1922,7 +1922,12 @@ The following features are explicitly out of scope for MVP but noted for future 
 - Full simulation without real execution
 - Strategy testing and validation
 
-### 14.5 Hardware Wallet Support
+### 14.5 Execution Enhancements
+- TWAP participation caps with randomized slice timing to reduce impact
+- Limit order fills from CLOB execution data with weighted average fill price
+- Manual order metadata fields (market question/outcome) for better UI context
+
+### 14.6 Hardware Wallet Support
 - Ledger/Trezor integration via WebHID
 - External signer (EIP-1193) support
 
