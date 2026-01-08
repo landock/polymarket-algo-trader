@@ -12,6 +12,7 @@ import { executeMarketOrder, hasTradingSession, getOpenOrders } from './trading-
 import { saveOrderToHistory, updateOrderHistoryEntry } from '../storage/order-history';
 import type { OrderHistoryEntry, AlgoOrderType } from '../shared/types';
 import { getPendingLimitOrders, updateLimitOrder, getActiveLimitOrderTokenIds } from '../storage/limit-orders';
+import { getAlgoOrders, setAlgoOrders } from '../storage/algo-orders';
 
 /**
  * Main engine tick - called by alarm every few seconds
@@ -43,8 +44,7 @@ export async function tickAlgoEngine() {
     await checkLimitOrders(prices);
 
     // Load all algo orders
-    const result = await chrome.storage.local.get('algo_orders');
-    const orders = result.algo_orders || [];
+    const orders = await getAlgoOrders();
 
     // Filter only ACTIVE orders (not PAUSED)
     const activeOrders = orders.filter((o: any) => o.status === 'ACTIVE');
@@ -65,7 +65,7 @@ export async function tickAlgoEngine() {
     }
 
     // Save updated orders
-    await chrome.storage.local.set({ algo_orders: orders });
+    await setAlgoOrders(orders);
   } catch (error) {
     console.error('[AlgoEngine] Error in tick:', error);
   }

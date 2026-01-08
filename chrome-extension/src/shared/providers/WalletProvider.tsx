@@ -9,7 +9,8 @@
  * - Supports lock/unlock functionality
  */
 
-import { Wallet, providers } from 'ethers';
+import { Wallet } from '@ethersproject/wallet';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { createPublicClient, http, PublicClient } from 'viem';
 import { createContext, useContext, useState, useMemo, ReactNode, useCallback, useEffect } from 'react';
 import { polygon } from 'viem/chains';
@@ -99,7 +100,7 @@ export default function WalletProvider({ children }: { children: ReactNode }) {
 
       // Create wallet
       const rpcUrl = DEFAULT_POLYGON_RPC_URL;
-      const provider = new providers.JsonRpcProvider(rpcUrl);
+      const provider = new JsonRpcProvider(rpcUrl);
       const walletInstance = new Wallet(`0x${privateKey}`, provider);
 
       setWallet(walletInstance);

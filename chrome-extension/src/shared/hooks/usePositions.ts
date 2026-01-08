@@ -22,6 +22,7 @@ export function usePositions(proxyAddress: string | undefined): UsePositionsRetu
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const inFlightRef = useRef(false);
 
   /**
    * Fetch positions from service worker
@@ -46,6 +47,11 @@ export function usePositions(proxyAddress: string | undefined): UsePositionsRetu
       return;
     }
 
+    if (inFlightRef.current) {
+      return;
+    }
+
+    inFlightRef.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -90,6 +96,7 @@ export function usePositions(proxyAddress: string | undefined): UsePositionsRetu
       }
     } finally {
       setIsLoading(false);
+      inFlightRef.current = false;
     }
   }, [proxyAddress]);
 

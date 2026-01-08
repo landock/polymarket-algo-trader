@@ -12,7 +12,8 @@
  */
 
 import { ClobClient, Side, AssetType, OrderType } from '@polymarket/clob-client';
-import { Wallet, providers } from 'ethers';
+import { Wallet } from '@ethersproject/wallet';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import axios from 'axios';
 import fetchAdapter from './axios-fetch-adapter';
 import { getAddress, keccak256, concat } from 'viem';
@@ -62,7 +63,7 @@ export async function initializeTradingSession(
     console.log('[TradingSession] Initializing trading session');
 
     // Create provider for Polygon network
-    const provider = new providers.JsonRpcProvider(POLYGON_RPC_URL, POLYGON_CHAIN_ID);
+    const provider = new JsonRpcProvider(POLYGON_RPC_URL, POLYGON_CHAIN_ID);
 
     // Create wallet from private key and connect to provider
     const wallet = new Wallet(

@@ -52,21 +52,7 @@ export async function testServiceWorkerDependencies() {
     results.push({ test: 'crypto.createHash', status: 'FAIL', error: error.message });
   }
 
-  // Test 4: ethers.js Wallet creation
-  try {
-    const { Wallet } = await import('ethers');
-    const testKey = '0x' + '1'.repeat(64);
-    const wallet = new Wallet(testKey);
-    if (wallet.address) {
-      results.push({ test: 'ethers.Wallet', status: 'PASS' });
-    } else {
-      results.push({ test: 'ethers.Wallet', status: 'FAIL', error: 'No address' });
-    }
-  } catch (error: any) {
-    results.push({ test: 'ethers.Wallet', status: 'FAIL', error: error.message });
-  }
-
-  // Test 5: ClobClient import
+  // Test 4: ClobClient import
   try {
     const { ClobClient } = await import('@polymarket/clob-client');
     if (ClobClient) {

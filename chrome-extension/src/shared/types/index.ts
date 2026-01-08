@@ -5,6 +5,7 @@
  */
 
 import { TradingSession, SessionStep } from '../../storage/session';
+import type { PolymarketPosition } from './positions';
 
 // Re-export storage types
 export type { TradingSession, SessionStep };
@@ -108,30 +109,113 @@ export interface ExtensionSettings {
   maxActiveAlgoOrders: number;
 }
 
+export interface CreateAlgoOrderRequest {
+  type: AlgoOrderType;
+  tokenId: string;
+  side: OrderSide;
+  size: number;
+  trailPercent?: number;
+  triggerPrice?: number;
+  stopLossPrice?: number;
+  takeProfitPrice?: number;
+  durationMinutes?: number;
+  intervalMinutes?: number;
+}
+
+export interface CreateLimitOrderRequest {
+  tokenId: string;
+  marketQuestion?: string;
+  outcome?: string;
+  side: OrderSide;
+  size: number;
+  limitPrice: number;
+}
+
+export interface CreatePriceAlertRequest {
+  tokenId: string;
+  marketQuestion?: string;
+  outcome?: string;
+  condition: PriceAlertCondition;
+  targetPrice: number;
+}
+
 /**
  * Message Types for chrome.runtime messaging
  */
 export type MessageType =
-  | 'EXECUTE_ORDER'
-  | 'GET_SESSION'
-  | 'UPDATE_SESSION'
-  | 'CLEAR_SESSION'
+  | 'INITIALIZE_TRADING_SESSION'
+  | 'CLEAR_TRADING_SESSION'
+  | 'GET_WALLET_ADDRESSES'
   | 'CREATE_ALGO_ORDER'
+  | 'PAUSE_ALGO_ORDER'
+  | 'RESUME_ALGO_ORDER'
   | 'CANCEL_ALGO_ORDER'
   | 'GET_ALGO_ORDERS'
-  | 'UNLOCK_WALLET'
-  | 'LOCK_WALLET';
+  | 'GET_CLOB_ORDERS'
+  | 'GET_POSITIONS'
+  | 'REFRESH_POSITIONS'
+  | 'QUICK_SELL_POSITION'
+  | 'REDEEM_POSITION'
+  | 'GET_PRICE_ALERTS'
+  | 'CREATE_PRICE_ALERT'
+  | 'UPDATE_PRICE_ALERT'
+  | 'DELETE_PRICE_ALERT'
+  | 'SNOOZE_PRICE_ALERT'
+  | 'DISMISS_PRICE_ALERT'
+  | 'GET_ALERT_HISTORY'
+  | 'GET_PORTFOLIO'
+  | 'GET_LIMIT_ORDERS'
+  | 'GET_PENDING_LIMIT_ORDERS'
+  | 'CREATE_LIMIT_ORDER'
+  | 'CANCEL_LIMIT_ORDER'
+  | 'DELETE_LIMIT_ORDER'
+  | 'GET_RISK_SETTINGS'
+  | 'UPDATE_RISK_SETTINGS'
+  | 'RESET_RISK_SETTINGS'
+  | 'GET_DAILY_LOSS';
 
-export interface ExtensionMessage {
-  type: MessageType;
-  payload?: any;
-}
+type MessagePayloads = {
+  INITIALIZE_TRADING_SESSION: { privateKey: string; proxyAddress?: string };
+  CLEAR_TRADING_SESSION: Record<string, never>;
+  GET_WALLET_ADDRESSES: Record<string, never>;
+  CREATE_ALGO_ORDER: { order: CreateAlgoOrderRequest };
+  PAUSE_ALGO_ORDER: { orderId: string };
+  RESUME_ALGO_ORDER: { orderId: string };
+  CANCEL_ALGO_ORDER: { orderId: string };
+  GET_ALGO_ORDERS: Record<string, never>;
+  GET_CLOB_ORDERS: Record<string, never>;
+  GET_POSITIONS: { proxyAddress: string };
+  REFRESH_POSITIONS: { proxyAddress: string };
+  QUICK_SELL_POSITION: { position: PolymarketPosition };
+  REDEEM_POSITION: { position: PolymarketPosition };
+  GET_PRICE_ALERTS: Record<string, never>;
+  CREATE_PRICE_ALERT: { alert: CreatePriceAlertRequest };
+  UPDATE_PRICE_ALERT: { alertId: string; updates: Partial<PriceAlert> };
+  DELETE_PRICE_ALERT: { alertId: string };
+  SNOOZE_PRICE_ALERT: { alertId: string; durationMinutes?: number };
+  DISMISS_PRICE_ALERT: { alertId: string };
+  GET_ALERT_HISTORY: Record<string, never>;
+  GET_PORTFOLIO: { proxyAddress?: string };
+  GET_LIMIT_ORDERS: Record<string, never>;
+  GET_PENDING_LIMIT_ORDERS: Record<string, never>;
+  CREATE_LIMIT_ORDER: { order: CreateLimitOrderRequest };
+  CANCEL_LIMIT_ORDER: { orderId: string };
+  DELETE_LIMIT_ORDER: { orderId: string };
+  GET_RISK_SETTINGS: Record<string, never>;
+  UPDATE_RISK_SETTINGS: { payload: Partial<RiskSettings> };
+  RESET_RISK_SETTINGS: Record<string, never>;
+  GET_DAILY_LOSS: Record<string, never>;
+};
 
-export interface MessageResponse {
+export type ExtensionMessage = {
+  [Type in MessageType]: { type: Type } & MessagePayloads[Type]
+}[MessageType];
+
+export type MessageResponse = {
   success: boolean;
   data?: any;
   error?: string;
-}
+} & Record<string, any>;
 
 /**
  * Algorithmic Order Types
@@ -184,6 +268,7 @@ export interface AlgoOrder {
   highestPrice?: number;
   lowestPrice?: number;
   executedSize?: number;
+  isActivated?: boolean;
   executionHistory: OrderExecution[];
 
   // Market info (cached)

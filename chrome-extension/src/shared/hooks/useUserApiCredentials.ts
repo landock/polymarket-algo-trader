@@ -8,7 +8,7 @@
 import { useCallback } from 'react';
 import { ClobClient } from '@polymarket/clob-client';
 import { CLOB_API_URL, POLYGON_CHAIN_ID } from '../constants/polymarket';
-import type { Wallet } from 'ethers';
+import type { Wallet } from '@ethersproject/wallet';
 
 export interface UserApiCredentials {
   key: string;

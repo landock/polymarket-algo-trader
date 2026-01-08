@@ -6,6 +6,7 @@
  */
 
 import { CLOB_API_URL } from '../shared/constants/polymarket';
+import { getAlgoOrders } from '../storage/algo-orders';
 import { getActiveTradingSession } from './trading-session';
 import { Side } from '@polymarket/clob-client';
 
@@ -140,8 +141,7 @@ export async function fetchTokenPrices(tokenIds: string[]): Promise<Map<string, 
  */
 export async function getActiveTokenIds(): Promise<string[]> {
   try {
-    const result = await chrome.storage.local.get('algo_orders');
-    const orders = result.algo_orders || [];
+    const orders = await getAlgoOrders();
 
     // Filter active and paused orders
     const activeOrders = orders.filter((o: any) =>
@@ -167,4 +167,12 @@ export function setupMarketMonitor(intervalSeconds: number = 5) {
   });
 
   console.log(`Market monitor alarm set up (every ${intervalSeconds}s)`);
+}
+
+export async function ensureMarketMonitor(intervalSeconds: number = 5) {
+  const alarm = await chrome.alarms.get('market-monitor');
+
+  if (!alarm || alarm.periodInMinutes !== intervalSeconds / 60) {
+    setupMarketMonitor(intervalSeconds);
+  }
 }
