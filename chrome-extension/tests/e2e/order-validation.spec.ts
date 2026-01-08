@@ -16,35 +16,27 @@ test.afterAll(async () => {
   await context.close();
 });
 
-test("renders CLOB orders from service worker response", async () => {
+test("shows validation errors for stop-loss without prices", async () => {
   await clearExtensionStorage(context);
   await setE2EOverrides(context, {
     walletAddresses: {
       eoaAddress: "0x1111111111111111111111111111111111111111",
       proxyAddress: "0x2222222222222222222222222222222222222222",
     },
-    clobOrders: [
-      {
-        id: "clob-1",
-        status: "LIVE",
-        owner: "0x1111111111111111111111111111111111111111",
-        maker_address: "0x1111111111111111111111111111111111111111",
-        market: "market-1",
-        asset_id: "asset-1",
-        side: "BUY",
-        original_size: "10",
-        size_matched: "2",
-        price: "0.45",
-        outcome: "Yes",
-        created_at: new Date().toISOString(),
-      },
-    ],
   });
+
   const page = await context.newPage();
   await page.goto("https://polymarket.com/");
 
   await unlockWallet(page);
-  await expect(page.locator("[data-cy=clob-orders]")).toBeVisible();
-  await expect(page.locator("[data-cy=clob-orders-list]")).toBeVisible();
-  await expect(page.locator("[data-cy=clob-order-clob-1]")).toBeVisible();
+  await page.click("[data-cy=create-algo-order]");
+  await page.selectOption("[data-cy=order-type]", "STOP_LOSS");
+  await page.fill("[data-cy=token-id]", "token-yes-12345");
+  await page.fill("[data-cy=order-size]", "1");
+  await page.click("[data-cy=order-submit]");
+
+  await expect(page.locator("[data-cy=order-validation]")).toBeVisible();
+  await expect(page.locator("[data-cy=order-validation]")).toContainText(
+    "At least one of Stop-Loss or Take-Profit price is required"
+  );
 });

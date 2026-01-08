@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   launchExtensionContext,
   clearExtensionStorage,
+  setE2EOverrides,
 } from "./extension-utils";
 
 let context: Awaited<ReturnType<typeof launchExtensionContext>>;
@@ -16,6 +17,12 @@ test.afterAll(async () => {
 
 test("shows unlock form after wallet is imported", async () => {
   await clearExtensionStorage(context);
+  await setE2EOverrides(context, {
+    walletAddresses: {
+      eoaAddress: "0x1111111111111111111111111111111111111111",
+      proxyAddress: "0x2222222222222222222222222222222222222222",
+    },
+  });
 
   const page = await context.newPage();
   await page.goto("https://polymarket.com/");

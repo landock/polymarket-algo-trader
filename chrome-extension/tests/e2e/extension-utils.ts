@@ -51,3 +51,23 @@ export async function setExtensionStorage(
     (await context.waitForEvent("serviceworker"));
   await worker.evaluate((data) => chrome.storage.local.set(data), value);
 }
+
+export async function setE2EOverrides(
+  context: BrowserContext,
+  overrides: Record<string, unknown>
+): Promise<void> {
+  await setExtensionStorage(context, { e2e_overrides: overrides });
+}
+
+export async function unlockWallet(
+  page: Page,
+  options?: { privateKey?: string; password?: string }
+): Promise<void> {
+  const privateKey = options?.privateKey ?? `0x${"1".repeat(64)}`;
+  const password = options?.password ?? "password123";
+
+  await page.fill("[data-cy=import-private-key]", privateKey);
+  await page.fill("[data-cy=import-password]", password);
+  await page.click("[data-cy=import-submit]");
+  await page.waitForSelector("[data-cy=lock-wallet]");
+}
