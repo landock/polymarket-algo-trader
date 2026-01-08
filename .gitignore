@@ -2,6 +2,8 @@
 /chrome-extension/build
 /chrome-extension/dist
 /chrome-extension/node_modules
+/chrome-extension/test-results
+/chrome-extension/playwright-report
 
 # Root
 /node_modules
