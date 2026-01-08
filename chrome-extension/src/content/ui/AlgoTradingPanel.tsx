@@ -5,18 +5,21 @@
  * Displays wallet status, algo order creation, and active orders
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useWallet } from '../../shared/providers/WalletProvider';
 import WalletUnlock from './WalletUnlock';
-import AlgoOrderForm, { AlgoOrderFormData } from './AlgoOrderForm';
 import ActiveOrdersList from './ActiveOrdersList';
 import ClobOrdersList from './ClobOrdersList';
-import OrderHistory from './OrderHistory';
 import PositionsList from './PositionsList';
 import LoadingSpinner from './LoadingSpinner';
 import { usePositions } from '../../shared/hooks/usePositions';
-import type { AlgoOrder } from '../../shared/types';
+import { getAlgoOrders } from '../../storage/algo-orders';
+import type { AlgoOrder, ExtensionMessage } from '../../shared/types';
 import type { PolymarketPosition } from '../../shared/types/positions';
+import type { AlgoOrderFormData } from './AlgoOrderForm';
+
+const AlgoOrderForm = React.lazy(() => import('./AlgoOrderForm'));
+const OrderHistory = React.lazy(() => import('./OrderHistory'));
 
 export default function AlgoTradingPanel() {
   const { isUnlocked, eoaAddress, proxyAddress, lockWallet } = useWallet();
@@ -36,12 +39,11 @@ export default function AlgoTradingPanel() {
     if (isUnlocked) {
       loadActiveOrders();
     }
-  }, [isUnlocked]);
+  }, [isUnlocked, loadActiveOrders]);
 
-  const loadActiveOrders = async () => {
+  const loadActiveOrders = useCallback(async () => {
     try {
-      const result = await chrome.storage.local.get('algo_orders');
-      const orders = result.algo_orders || [];
+      const orders = await getAlgoOrders();
       // Filter only active and paused orders
       const active = orders.filter((o: AlgoOrder) =>
         o.status === 'ACTIVE' || o.status === 'PAUSED'
@@ -50,10 +52,10 @@ export default function AlgoTradingPanel() {
     } catch (error) {
       console.error('Failed to load orders:', error);
     }
-  };
+  }, []);
 
   // Helper to safely send messages to service worker
-  const sendMessage = (message: any, callback?: (response: any) => void) => {
+  const sendMessage = (message: ExtensionMessage, callback?: (response: any) => void) => {
     try {
       if (!chrome?.runtime?.sendMessage) {
         console.error('Extension context invalidated. Please reload this page.');
@@ -190,66 +192,58 @@ export default function AlgoTradingPanel() {
   };
 
   return (
-    <div className="algo-panel" style={{ position: 'relative' }} data-cy="algo-panel">
+    <div
+      className="algo-panel relative overflow-hidden rounded-[14px] border border-[#e2dbd1] bg-[#fbf9f6] shadow-[0_18px_40px_rgba(31,42,51,0.18)]"
+      data-cy="algo-panel"
+    >
       {/* Panel Header */}
       <div
-        className="algo-panel-header"
+        className="flex cursor-pointer items-start justify-between border-b border-[#e2dbd1] px-5 py-4"
         onClick={() => setIsExpanded(!isExpanded)}
         data-cy="algo-panel-header"
       >
         <div>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>
-            Algo Trading
+          <h3 className="m-0 text-[20px] font-semibold text-[#1f2a33]">
+            Algo Trader
           </h3>
+          <div className="mt-1 font-mono text-[11px] uppercase tracking-[0.2em] text-[#58656f]">
+            Polymarket Extension
+          </div>
           {isUnlocked && eoaAddress && (
-            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>
+            <div className="mt-2 font-mono text-[11px] text-[#6b7a86]">
               {formatAddress(eoaAddress)}
             </div>
           )}
         </div>
-        <span style={{ fontSize: '20px', fontWeight: 'bold' }}>
+        <span className="mt-1 text-[22px] font-semibold text-[#1f2a33]">
           {isExpanded ? '−' : '+'}
         </span>
       </div>
 
       {/* Panel Body */}
       {isExpanded && (
-        <div className="algo-panel-body" data-cy="algo-panel-body">
-              {!isUnlocked ? (
+        <div className="space-y-4 px-5 py-4" data-cy="algo-panel-body">
+          {!isUnlocked ? (
             /* Show wallet unlock if not unlocked */
             <WalletUnlock onUnlocked={() => console.log('Wallet unlocked!')} />
           ) : (
             /* Show trading interface when unlocked */
             <>
               {/* Wallet Status Bar */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '12px',
-                background: '#f0fdf4',
-                border: '1px solid #86efac',
-                borderRadius: '6px',
-                marginBottom: '16px'
-              }}>
+              <div className="flex items-center justify-between rounded-[12px] border border-[#e2dbd1] bg-white px-4 py-3">
                 <div>
-                  <div style={{ fontSize: '12px', color: '#15803d', fontWeight: 500 }}>
-                    ✓ Wallet Unlocked
+                  <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#8a6a50]">
+                    Status
                   </div>
-                  <div style={{ fontSize: '11px', color: '#4ade80', marginTop: '2px' }}>
+                  <div className="text-[16px] font-semibold text-[#1f2a33]">Unlocked</div>
+                  <div className="mt-1 font-mono text-[11px] text-[#6b7a86]">
                     Ready to trade
                   </div>
                 </div>
                 <button
                   onClick={() => lockWallet()}
                   data-cy="lock-wallet"
-                  style={{
-                    padding: '6px 12px',
-                    fontSize: '12px',
-                    background: 'transparent',
-                    color: '#15803d',
-                    border: '1px solid #86efac'
-                  }}
+                  className="flex h-8 w-[92px] items-center justify-center rounded-[8px] bg-[#1f2a33] font-mono text-[11px] uppercase tracking-[0.2em] text-[#fbf9f6] transition hover:bg-[#2a3641]"
                 >
                   Lock
                 </button>
@@ -257,14 +251,16 @@ export default function AlgoTradingPanel() {
 
               {showOrderForm ? (
                 /* Show order creation form */
-                <AlgoOrderForm
-                  onSubmit={handleCreateOrder}
-                  onCancel={() => {
-                    setShowOrderForm(false);
-                    setOrderFormInitialData(undefined);
-                  }}
-                  initialData={orderFormInitialData}
-                />
+                <React.Suspense fallback={<LoadingSpinner size="small" message="Loading order form..." />}>
+                  <AlgoOrderForm
+                    onSubmit={handleCreateOrder}
+                    onCancel={() => {
+                      setShowOrderForm(false);
+                      setOrderFormInitialData(undefined);
+                    }}
+                    initialData={orderFormInitialData}
+                  />
+                </React.Suspense>
               ) : (
                 <>
                   {/* Quick Actions */}
@@ -274,42 +270,27 @@ export default function AlgoTradingPanel() {
                       setShowOrderForm(true);
                     }}
                     data-cy="create-algo-order"
-                    style={{
-                      width: '100%',
-                      marginBottom: '16px',
-                      background: '#667eea',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      cursor: 'pointer'
-                    }}
+                    className="flex w-full items-center justify-center rounded-[10px] bg-[#1f2a33] py-3 font-mono text-[12px] uppercase tracking-[0.22em] text-[#fbf9f6] transition hover:bg-[#2a3641]"
                   >
-                    + Create Algo Order
+                    Create Order
                   </button>
 
                   {/* My Positions Section */}
-                  <div style={{ marginBottom: '16px' }}>
+                  <div className="space-y-3">
                     <div
                       onClick={() => setShowPositions(!showPositions)}
                       data-cy="positions-toggle"
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '12px',
-                        background: '#f9fafb',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        marginBottom: showPositions ? '12px' : 0
-                      }}
+                      className={`flex cursor-pointer items-center justify-between rounded-[10px] border border-[#e2dbd1] bg-white px-4 py-3 ${showPositions ? '' : 'opacity-80'}`}
                     >
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
-                        My Positions ({positions.length})
+                      <div>
+                        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#8a6a50]">
+                          Positions
+                        </div>
+                        <div className="text-[14px] font-semibold text-[#1f2a33]">
+                          {positions.length} open
+                        </div>
                       </div>
-                      <span style={{ fontSize: '16px', color: '#6b7280' }}>
+                      <span className="text-[16px] text-[#6b7a86]">
                         {showPositions ? '▼' : '▶'}
                       </span>
                     </div>
@@ -334,14 +315,8 @@ export default function AlgoTradingPanel() {
 
                   {/* Active Orders Section */}
                   <div>
-                    <h4 style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      marginTop: 0,
-                      marginBottom: '12px',
-                      color: '#333'
-                    }}>
-                      Algo Orders ({activeOrders.length})
+                    <h4 className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-[#8a6a50]">
+                      Orders
                     </h4>
 
                     <ActiveOrdersList
@@ -353,27 +328,22 @@ export default function AlgoTradingPanel() {
                   </div>
 
                   {/* Order History Section */}
-                  <div style={{ marginTop: '16px' }}>
-                    <OrderHistory />
+                  <div className="rounded-[12px] border border-[#e2dbd1] bg-white px-4 py-3">
+                    <React.Suspense fallback={<div>Loading order history...</div>}>
+                      <OrderHistory />
+                    </React.Suspense>
                   </div>
 
                   {/* Info Section */}
-                  <div style={{
-                    marginTop: '16px',
-                    padding: '12px',
-                    background: '#f9fafb',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    color: '#666'
-                  }}>
-                    <div style={{ fontWeight: 600, marginBottom: '8px' }}>
+                  <div className="rounded-[12px] border border-[#e2dbd1] bg-[#fff9f2] px-4 py-3 text-[12px] text-[#6b7a86]">
+                    <div className="mb-2 font-semibold text-[#1f2a33]">
                       Available Order Types:
                     </div>
-                    <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                      <li style={{ marginBottom: '4px' }}>
+                    <ul className="ml-5 list-disc space-y-1">
+                      <li>
                         <strong>Trailing Stop</strong> - Follow price movements
                       </li>
-                      <li style={{ marginBottom: '4px' }}>
+                      <li>
                         <strong>Stop-Loss/Take-Profit</strong> - Auto exit positions
                       </li>
                       <li>
@@ -390,19 +360,7 @@ export default function AlgoTradingPanel() {
 
       {/* Loading Overlay */}
       {isCreatingOrder && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(255, 255, 255, 0.9)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '12px',
-          zIndex: 100
-        }}>
+        <div className="absolute inset-0 z-[100] flex items-center justify-center rounded-[14px] bg-[rgba(255,255,255,0.9)]">
           <LoadingSpinner size="medium" message="Creating order..." />
         </div>
       )}

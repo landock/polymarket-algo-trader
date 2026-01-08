@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  #polymarket-algo-extension {
+    font-family: "Newsreader", serif;
+    color: #1f2a33;
+  }
+}

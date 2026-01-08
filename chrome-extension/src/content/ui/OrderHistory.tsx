@@ -4,16 +4,15 @@
  * Displays comprehensive order execution history with filtering and sorting
  */
 
-import React, { useState, useEffect } from 'react';
-import type { OrderHistoryEntry, AlgoOrderType } from '../../shared/types';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { OrderHistoryEntry } from '../../shared/types';
 import { getOrderHistory } from '../../storage/order-history';
-
-type SortField = 'timestamp' | 'orderType' | 'side' | 'size' | 'price';
-type SortOrder = 'asc' | 'desc';
+import OrderHistoryFilters from './OrderHistoryFilters';
+import OrderHistoryTable from './OrderHistoryTable';
+import { buildOrderHistoryCsv, formatTimestamp, SortField, SortOrder } from './order-history-utils';
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<OrderHistoryEntry[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<OrderHistoryEntry[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Filter states
@@ -30,10 +29,6 @@ export default function OrderHistory() {
     loadOrderHistory();
   }, []);
 
-  useEffect(() => {
-    applyFiltersAndSort();
-  }, [orders, dateFilter, orderTypeFilter, sideFilter, statusFilter, sortField, sortOrder]);
-
   const loadOrderHistory = async () => {
     try {
       const history = await getOrderHistory();
@@ -43,7 +38,7 @@ export default function OrderHistory() {
     }
   };
 
-  const applyFiltersAndSort = () => {
+  const filteredOrders = useMemo(() => {
     let filtered = [...orders];
 
     // Apply date filter
@@ -96,8 +91,8 @@ export default function OrderHistory() {
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
-    setFilteredOrders(filtered);
-  };
+    return filtered;
+  }, [orders, dateFilter, orderTypeFilter, sideFilter, statusFilter, sortField, sortOrder]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -115,110 +110,15 @@ export default function OrderHistory() {
     setStatusFilter('ALL');
   };
 
-  const getOrderTypeLabel = (entry: OrderHistoryEntry): string => {
-    if (entry.orderType === 'ALGO' && entry.algoType) {
-      switch (entry.algoType) {
-        case 'TRAILING_STOP': return 'Trailing Stop';
-        case 'STOP_LOSS': return 'Stop-Loss';
-        case 'TAKE_PROFIT': return 'Take-Profit';
-        case 'TWAP': return 'TWAP';
-        default: return entry.algoType;
-      }
-    }
-    return entry.orderType;
-  };
-
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return '↕️';
-    return sortOrder === 'asc' ? '↑' : '↓';
-  };
-
-  const escapeCSVValue = (value: any): string => {
-    if (value === null || value === undefined) return '';
-
-    const stringValue = String(value);
-
-    // If the value contains comma, newline, or double quote, wrap in quotes and escape quotes
-    if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
-      return `"${stringValue.replace(/"/g, '""')}"`;
-    }
-
-    return stringValue;
-  };
-
   const exportToCSV = () => {
-    // Use filtered orders to respect current filters
-    const dataToExport = filteredOrders;
-
-    // Define CSV headers
-    const headers = [
-      'Timestamp',
-      'Date',
-      'Order Type',
-      'Algo Type',
-      'Token ID',
-      'Market Question',
-      'Outcome',
-      'Side',
-      'Size',
-      'Price',
-      'Executed Price',
-      'Status',
-      'Algo Order ID',
-      'CLOB Order ID',
-      'Error'
-    ];
-
-    // Create CSV rows
-    const rows = dataToExport.map(order => [
-      order.timestamp,
-      new Date(order.timestamp).toISOString(),
-      order.orderType,
-      order.algoType || '',
-      order.tokenId,
-      order.marketQuestion || '',
-      order.outcome || '',
-      order.side,
-      order.size,
-      order.price,
-      order.executedPrice || '',
-      order.status,
-      order.algoOrderId || '',
-      order.clobOrderId || '',
-      order.error || ''
-    ]);
-
-    // Build CSV content
-    const csvContent = [
-      headers.map(escapeCSVValue).join(','),
-      ...rows.map(row => row.map(escapeCSVValue).join(','))
-    ].join('\n');
+    const { csvContent, filename } = buildOrderHistoryCsv(filteredOrders);
 
     // Create blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-
-    // Generate filename with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    link.setAttribute('download', `polymarket-order-history-${timestamp}.csv`);
+    link.setAttribute('download', filename);
 
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
@@ -229,15 +129,10 @@ export default function OrderHistory() {
 
   if (orders.length === 0) {
     return (
-      <div style={{
-        padding: '12px',
-        background: '#f9fafb',
-        borderRadius: '6px',
-        border: '1px dashed #d1d5db',
-        textAlign: 'center',
-        fontSize: '13px',
-        color: '#6b7280'
-      }} data-cy="order-history-empty">
+      <div
+        className="rounded-[10px] border border-dashed border-[#e2dbd1] bg-[#fff9f2] p-3 text-center text-sm text-[#6b7a86]"
+        data-cy="order-history-empty"
+      >
         No order history yet
       </div>
     );
@@ -247,313 +142,40 @@ export default function OrderHistory() {
     <div data-cy="order-history">
       <div
         onClick={() => setIsExpanded(!isExpanded)}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '12px',
-          background: '#f9fafb',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          marginBottom: isExpanded ? '12px' : 0
-        }}
+        className={`flex cursor-pointer items-center justify-between rounded-[10px] border border-[#e2dbd1] bg-[#fff9f2] p-3 ${isExpanded ? 'mb-3' : ''}`}
         data-cy="order-history-toggle"
       >
-        <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#8a6a50]">
           Order History ({filteredOrders.length}{orders.length !== filteredOrders.length ? ` of ${orders.length}` : ''})
         </div>
-        <span style={{ fontSize: '16px', color: '#6b7280' }}>
+        <span className="text-base text-[#6b7a86]">
           {isExpanded ? '▼' : '▶'}
         </span>
       </div>
 
       {isExpanded && (
         <div>
-          {/* Filters */}
-          <div style={{
-            padding: '12px',
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px',
-            marginBottom: '12px'
-          }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: '#374151' }}>
-              Filters
-            </div>
+          <OrderHistoryFilters
+            dateFilter={dateFilter}
+            orderTypeFilter={orderTypeFilter}
+            sideFilter={sideFilter}
+            statusFilter={statusFilter}
+            onDateFilterChange={setDateFilter}
+            onOrderTypeFilterChange={setOrderTypeFilter}
+            onSideFilterChange={setSideFilter}
+            onStatusFilterChange={setStatusFilter}
+            onClearFilters={clearFilters}
+            onExportCsv={exportToCSV}
+            exportCount={filteredOrders.length}
+          />
 
-            {/* Date Range */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>Date Range</div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="date"
-                  value={dateFilter.start || ''}
-                  onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
-                  style={{
-                    flex: 1,
-                    padding: '4px 8px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '4px',
-                    fontSize: '11px'
-                  }}
-                />
-                <input
-                  type="date"
-                  value={dateFilter.end || ''}
-                  onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
-                  style={{
-                    flex: 1,
-                    padding: '4px 8px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '4px',
-                    fontSize: '11px'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Order Type Filter */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>Order Type</div>
-              <select
-                value={orderTypeFilter}
-                onChange={(e) => setOrderTypeFilter(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '4px 8px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  fontSize: '11px'
-                }}
-              >
-                <option value="ALL">All Types</option>
-                <option value="MARKET">Market</option>
-                <option value="LIMIT">Limit</option>
-                <option value="ALGO">Algorithmic</option>
-              </select>
-            </div>
-
-            {/* Side Filter */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>Side</div>
-              <select
-                value={sideFilter}
-                onChange={(e) => setSideFilter(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '4px 8px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  fontSize: '11px'
-                }}
-              >
-                <option value="ALL">All Sides</option>
-                <option value="BUY">Buy</option>
-                <option value="SELL">Sell</option>
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>Status</div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '4px 8px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  fontSize: '11px'
-                }}
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="EXECUTED">Executed</option>
-                <option value="FAILED">Failed</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="PENDING">Pending</option>
-              </select>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={clearFilters}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  background: '#f3f4f6',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: '#374151',
-                  cursor: 'pointer'
-                }}
-              >
-                Clear Filters
-              </button>
-              <button
-                onClick={exportToCSV}
-                disabled={filteredOrders.length === 0}
-                style={{
-                  flex: 1,
-                  padding: '6px',
-                  background: filteredOrders.length === 0 ? '#f3f4f6' : '#10b981',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: filteredOrders.length === 0 ? '#9ca3af' : 'white',
-                  cursor: filteredOrders.length === 0 ? 'not-allowed' : 'pointer'
-                }}
-                data-cy="export-csv-button"
-              >
-                Export to CSV ({filteredOrders.length})
-              </button>
-            </div>
-          </div>
-
-          {/* Orders Table */}
-          <div style={{
-            maxHeight: '400px',
-            overflowY: 'auto',
-            border: '1px solid #e5e7eb',
-            borderRadius: '6px'
-          }} data-cy="order-history-list">
-            {/* Table Header */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 80px 60px 80px 90px 90px',
-              gap: '8px',
-              padding: '8px',
-              background: '#f9fafb',
-              borderBottom: '1px solid #e5e7eb',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: '#6b7280',
-              position: 'sticky',
-              top: 0
-            }}>
-              <div
-                onClick={() => handleSort('timestamp')}
-                style={{ cursor: 'pointer', userSelect: 'none' }}
-              >
-                Time {getSortIcon('timestamp')}
-              </div>
-              <div
-                onClick={() => handleSort('orderType')}
-                style={{ cursor: 'pointer', userSelect: 'none' }}
-              >
-                Type {getSortIcon('orderType')}
-              </div>
-              <div
-                onClick={() => handleSort('side')}
-                style={{ cursor: 'pointer', userSelect: 'none' }}
-              >
-                Side {getSortIcon('side')}
-              </div>
-              <div
-                onClick={() => handleSort('size')}
-                style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-              >
-                Size {getSortIcon('size')}
-              </div>
-              <div
-                onClick={() => handleSort('price')}
-                style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-              >
-                Price {getSortIcon('price')}
-              </div>
-              <div style={{ textAlign: 'center' }}>Status</div>
-            </div>
-
-            {/* Table Rows */}
-            {filteredOrders.length === 0 ? (
-              <div style={{
-                padding: '20px',
-                textAlign: 'center',
-                fontSize: '12px',
-                color: '#6b7280'
-              }}>
-                No orders match the current filters
-              </div>
-            ) : (
-              filteredOrders.map((order) => (
-                <div
-                  key={order.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 80px 60px 80px 90px 90px',
-                    gap: '8px',
-                    padding: '8px',
-                    background: 'white',
-                    borderBottom: '1px solid #f3f4f6',
-                    fontSize: '11px',
-                    color: '#374151'
-                  }}
-                  data-cy={`order-history-${order.id}`}
-                >
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    <div style={{ fontWeight: 500 }}>{formatTimestamp(order.timestamp)}</div>
-                    {order.marketQuestion && (
-                      <div style={{
-                        fontSize: '10px',
-                        color: '#6b7280',
-                        marginTop: '2px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {order.marketQuestion}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '10px' }}>{getOrderTypeLabel(order)}</div>
-                  <div style={{
-                    fontWeight: 600,
-                    color: order.side === 'BUY' ? '#10b981' : '#ef4444'
-                  }}>
-                    {order.side}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>{order.size.toFixed(2)}</div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div>${order.price.toFixed(4)}</div>
-                    {order.executedPrice && order.executedPrice !== order.price && (
-                      <div style={{ fontSize: '10px', color: '#6b7280' }}>
-                        ${order.executedPrice.toFixed(4)}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <span style={{
-                      padding: '2px 6px',
-                      borderRadius: '3px',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      color: order.status === 'EXECUTED' ? '#10b981' :
-                             order.status === 'FAILED' ? '#ef4444' :
-                             order.status === 'CANCELLED' ? '#6b7280' : '#f59e0b',
-                      background: order.status === 'EXECUTED' ? '#d1fae5' :
-                                 order.status === 'FAILED' ? '#fee2e2' :
-                                 order.status === 'CANCELLED' ? '#f3f4f6' : '#fef3c7'
-                    }}>
-                      {order.status}
-                    </span>
-                    {order.error && (
-                      <div style={{
-                        fontSize: '9px',
-                        color: '#ef4444',
-                        marginTop: '2px'
-                      }} title={order.error}>
-                        Error
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <OrderHistoryTable
+            orders={filteredOrders}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            formatTimestamp={formatTimestamp}
+          />
         </div>
       )}
     </div>
