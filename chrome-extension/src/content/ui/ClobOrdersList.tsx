@@ -43,6 +43,32 @@ export default function ClobOrdersList() {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!chrome?.storage?.local?.get) {
+      return;
+    }
+
+    chrome.storage.local
+      .get('e2e_overrides')
+      .then((result) => {
+        if (!isMounted) {
+          return;
+        }
+
+        if (result?.e2e_overrides?.contextInvalidated) {
+          setError('Extension was reloaded. Please refresh this page.');
+          setContextInvalidated(true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const ensureAutoRefresh = () => {
     if (intervalRef.current === null) {
       intervalRef.current = window.setInterval(loadOrders, 10000);

@@ -132,12 +132,10 @@ test("shows context invalidated banner and reload prompt", async () => {
       eoaAddress: "0x1111111111111111111111111111111111111111",
       proxyAddress: "0x2222222222222222222222222222222222222222",
     },
+    contextInvalidated: true,
   });
 
   const page = await context.newPage();
-  await page.addInitScript(() => {
-    (window as any).__E2E_CONTEXT_INVALIDATED__ = true;
-  });
   await page.goto("https://polymarket.com/");
 
   await unlockWallet(page);
