@@ -4,7 +4,6 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './tailwind.css';
 
 const LimitOrdersPage = React.lazy(() => import('./limit-orders/LimitOrdersPage'));
 

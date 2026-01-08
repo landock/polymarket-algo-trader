@@ -6,7 +6,6 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './tailwind.css';
 
 const OrderHistory = React.lazy(() => import('../content/ui/OrderHistory'));
 
