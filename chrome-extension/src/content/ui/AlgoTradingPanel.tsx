@@ -12,9 +12,10 @@ import ActiveOrdersList from './ActiveOrdersList';
 import ClobOrdersList from './ClobOrdersList';
 import PositionsList from './PositionsList';
 import LoadingSpinner from './LoadingSpinner';
+import ManualOrderForm from './ManualOrderForm';
 import { usePositions } from '../../shared/hooks/usePositions';
 import { getAlgoOrders } from '../../storage/algo-orders';
-import type { AlgoOrder, ExtensionMessage } from '../../shared/types';
+import type { AlgoOrder, ExtensionMessage, MessageResponse, CreateLimitOrderRequest, CreateMarketOrderRequest } from '../../shared/types';
 import type { PolymarketPosition } from '../../shared/types/positions';
 import type { AlgoOrderFormData } from './AlgoOrderForm';
 
@@ -75,6 +76,41 @@ export default function AlgoTradingPanel() {
       console.error('Failed to send message:', error);
       alert('Extension connection lost. Please reload this page.');
     }
+  };
+
+  const sendMessageAsync = (message: ExtensionMessage): Promise<MessageResponse> =>
+    new Promise((resolve) => {
+      sendMessage(message, (response) => {
+        resolve(response || { success: false, error: 'No response from extension.' });
+      });
+    });
+
+  const handleExecuteMarketOrder = async (order: CreateMarketOrderRequest) => {
+    const response = await sendMessageAsync({
+      type: 'EXECUTE_MARKET_ORDER',
+      order
+    });
+
+    if (response.success) {
+      alert('✅ Market order placed.');
+      refreshPositions();
+    }
+
+    return response;
+  };
+
+  const handleCreateLimitOrder = async (order: CreateLimitOrderRequest) => {
+    const response = await sendMessageAsync({
+      type: 'CREATE_LIMIT_ORDER',
+      order
+    });
+
+    if (response.success) {
+      alert('✅ Limit order placed.');
+      loadActiveOrders();
+    }
+
+    return response;
   };
 
   const handleCreateOrder = (orderData: AlgoOrderFormData) => {
@@ -263,6 +299,16 @@ export default function AlgoTradingPanel() {
                 </React.Suspense>
               ) : (
                 <>
+                  <div className="rounded-[12px] border border-[#e2dbd1] bg-white px-4 py-3">
+                    <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-[#8a6a50]">
+                      Manual Orders
+                    </div>
+                    <ManualOrderForm
+                      onExecuteMarket={handleExecuteMarketOrder}
+                      onCreateLimit={handleCreateLimitOrder}
+                    />
+                  </div>
+
                   {/* Quick Actions */}
                   <button
                     onClick={() => {
@@ -272,7 +318,7 @@ export default function AlgoTradingPanel() {
                     data-cy="create-algo-order"
                     className="flex w-full items-center justify-center rounded-[10px] bg-[#1f2a33] py-3 font-mono text-[12px] uppercase tracking-[0.22em] text-[#fbf9f6] transition hover:bg-[#2a3641]"
                   >
-                    Create Order
+                    Create Algo Order
                   </button>
 
                   {/* My Positions Section */}

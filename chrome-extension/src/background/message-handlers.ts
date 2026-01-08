@@ -3,6 +3,7 @@ import { handleCreateAlgoOrder, handleCancelAlgoOrder, handleGetAlgoOrders, hand
 import { handleCreatePriceAlert, handleDeletePriceAlert, handleDismissPriceAlert, handleGetAlertHistory, handleGetPriceAlerts, handleSnoozePriceAlert, handleUpdatePriceAlert } from './handlers/alert-handlers';
 import { handleGetClobOrders } from './handlers/clob-order-handlers';
 import { handleCreateLimitOrder, handleCancelLimitOrder, handleDeleteLimitOrder, handleGetLimitOrders, handleGetPendingLimitOrders } from './handlers/limit-order-handlers';
+import { handleExecuteMarketOrder } from './handlers/market-order-handlers';
 import { handleGetPortfolio } from './handlers/portfolio-handlers';
 import { handleGetPositions, handleQuickSellPosition, handleRedeemPosition, handleRefreshPositions } from './handlers/position-handlers';
 import { handleGetDailyLoss, handleGetRiskSettings, handleResetRiskSettings, handleUpdateRiskSettings } from './handlers/risk-settings-handlers';
@@ -16,6 +17,7 @@ export const MESSAGE_HANDLERS: { [K in MessageType]: Handler<K> } = {
   CLEAR_TRADING_SESSION: () => handleClearTradingSession(),
   GET_WALLET_ADDRESSES: () => handleGetWalletAddresses(),
   CREATE_ALGO_ORDER: (message) => handleCreateAlgoOrder(message.order),
+  EXECUTE_MARKET_ORDER: (message) => handleExecuteMarketOrder(message.order),
   PAUSE_ALGO_ORDER: (message) => handlePauseAlgoOrder(message.orderId),
   RESUME_ALGO_ORDER: (message) => handleResumeAlgoOrder(message.orderId),
   CANCEL_ALGO_ORDER: (message) => handleCancelAlgoOrder(message.orderId),

@@ -11,8 +11,11 @@ export default function ClobOrdersList() {
   const [orders, setOrders] = useState<ClobOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requiresSession, setRequiresSession] = useState(false);
+  const [contextInvalidated, setContextInvalidated] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const intervalRef = React.useRef<number | null>(null);
+  const reloadTimeoutRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -23,14 +26,41 @@ export default function ClobOrdersList() {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      if (reloadTimeoutRef.current !== null) {
+        clearTimeout(reloadTimeoutRef.current);
+        reloadTimeoutRef.current = null;
+      }
     };
   }, []);
+
+  const ensureAutoRefresh = () => {
+    if (intervalRef.current === null) {
+      intervalRef.current = window.setInterval(loadOrders, 10000);
+    }
+  };
+
+  const scheduleAutoReload = () => {
+    if (reloadTimeoutRef.current === null) {
+      reloadTimeoutRef.current = window.setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    }
+  };
+
+  const clearAutoReload = () => {
+    if (reloadTimeoutRef.current !== null) {
+      clearTimeout(reloadTimeoutRef.current);
+      reloadTimeoutRef.current = null;
+    }
+  };
 
   const loadOrders = async () => {
     // Check if extension context is still valid
     if (!chrome?.runtime?.sendMessage) {
       console.error('[ClobOrdersList] Extension context invalidated');
       setError('Extension was reloaded. Please refresh this page.');
+      setContextInvalidated(true);
+      scheduleAutoReload();
       setIsLoading(false);
       // Stop auto-refresh
       if (intervalRef.current !== null) {
@@ -42,6 +72,8 @@ export default function ClobOrdersList() {
 
     setIsLoading(true);
     setError(null);
+    setRequiresSession(false);
+    ensureAutoRefresh();
 
     try {
       const response: any = await new Promise((resolve, reject) => {
@@ -59,19 +91,32 @@ export default function ClobOrdersList() {
 
       if (response?.success) {
         setOrders(response.data || []);
+        setContextInvalidated(false);
+        clearAutoReload();
       } else {
         throw new Error(response?.error || 'Failed to fetch orders');
       }
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to load orders';
-      console.error('[ClobOrdersList] Error:', errorMessage);
+      const isNoSession = errorMessage.includes('No active trading session');
+      if (!isNoSession) {
+        console.error('[ClobOrdersList] Error:', errorMessage);
+      }
 
       // Check if this is a context invalidation error
       if (errorMessage.includes('Extension context invalidated') ||
           errorMessage.includes('message channel closed') ||
           chrome.runtime?.lastError?.message?.includes('Extension context invalidated')) {
         setError('Extension was reloaded. Please refresh this page.');
+        setContextInvalidated(true);
+        scheduleAutoReload();
         // Stop auto-refresh
+        if (intervalRef.current !== null) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      } else if (isNoSession) {
+        setRequiresSession(true);
         if (intervalRef.current !== null) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -123,6 +168,68 @@ export default function ClobOrdersList() {
 
     return { matched, remaining, percentFilled };
   };
+
+  if (contextInvalidated) {
+    return (
+      <div style={{
+        padding: '12px',
+        background: '#f6f0e6',
+        border: '1px solid #d7c7ab',
+        borderRadius: '8px',
+        marginBottom: '16px'
+      }} data-cy="clob-orders-context-invalidated">
+        <div style={{ fontSize: '12px', color: '#7a5a3a', marginBottom: '8px' }}>
+          🔄 Extension reloaded. Refreshing this page in a moment.
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: '6px 12px',
+            background: '#1f2a33',
+            color: '#fbf9f6',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '11px',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          Reload now
+        </button>
+      </div>
+    );
+  }
+
+  if (requiresSession && orders.length === 0) {
+    return (
+      <div style={{
+        padding: '12px',
+        background: '#f6f0e6',
+        border: '1px solid #d7c7ab',
+        borderRadius: '8px',
+        marginBottom: '16px'
+      }} data-cy="clob-orders-session-required">
+        <div style={{ fontSize: '12px', color: '#7a5a3a', marginBottom: '8px' }}>
+          🔒 Unlock your wallet to load exchange orders.
+        </div>
+        <button
+          onClick={loadOrders}
+          style={{
+            padding: '6px 12px',
+            background: '#1f2a33',
+            color: '#fbf9f6',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '11px',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (error && orders.length === 0) {
     return (

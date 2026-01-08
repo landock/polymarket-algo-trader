@@ -15,7 +15,12 @@ export async function handleGetClobOrders() {
     const result = await getOpenOrders();
 
     if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch CLOB orders');
+      const errorMessage = result.error || 'Failed to fetch CLOB orders';
+      if (errorMessage.includes('No active trading session')) {
+        console.warn('[ServiceWorker] No active trading session for CLOB orders');
+        return { success: false, error: errorMessage };
+      }
+      throw new Error(errorMessage);
     }
 
     console.log('[ServiceWorker] Found', result.data?.length || 0, 'CLOB orders');

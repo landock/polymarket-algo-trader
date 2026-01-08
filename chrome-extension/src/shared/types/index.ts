@@ -131,6 +131,12 @@ export interface CreateLimitOrderRequest {
   limitPrice: number;
 }
 
+export interface CreateMarketOrderRequest {
+  tokenId: string;
+  side: OrderSide;
+  size: number;
+}
+
 export interface CreatePriceAlertRequest {
   tokenId: string;
   marketQuestion?: string;
@@ -147,6 +153,7 @@ export type MessageType =
   | 'CLEAR_TRADING_SESSION'
   | 'GET_WALLET_ADDRESSES'
   | 'CREATE_ALGO_ORDER'
+  | 'EXECUTE_MARKET_ORDER'
   | 'PAUSE_ALGO_ORDER'
   | 'RESUME_ALGO_ORDER'
   | 'CANCEL_ALGO_ORDER'
@@ -179,6 +186,7 @@ type MessagePayloads = {
   CLEAR_TRADING_SESSION: Record<string, never>;
   GET_WALLET_ADDRESSES: Record<string, never>;
   CREATE_ALGO_ORDER: { order: CreateAlgoOrderRequest };
+  EXECUTE_MARKET_ORDER: { order: CreateMarketOrderRequest };
   PAUSE_ALGO_ORDER: { orderId: string };
   RESUME_ALGO_ORDER: { orderId: string };
   CANCEL_ALGO_ORDER: { orderId: string };
