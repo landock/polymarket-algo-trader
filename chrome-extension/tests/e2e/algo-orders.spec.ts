@@ -26,6 +26,10 @@ test("creates, pauses, resumes, and cancels an algo order", async () => {
   });
 
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    window.alert = () => {};
+    window.confirm = () => true;
+  });
   await page.goto("https://polymarket.com/");
 
   page.on("dialog", async (dialog) => {
@@ -55,5 +59,5 @@ test("creates, pauses, resumes, and cancels an algo order", async () => {
   await expect(order.first()).toContainText("ACTIVE");
 
   await order.locator("[data-cy^=algo-order-cancel-]").click();
-  await expect(order).toHaveCount(0);
+  await expect(page.getByText("No active algo orders")).toBeVisible();
 });
