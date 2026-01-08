@@ -26,6 +26,19 @@ test("validates manual order inputs", async () => {
   });
 
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    document.documentElement.setAttribute(
+      "data-e2e-token-ids",
+      JSON.stringify([
+        "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "0x2222222222222222222222222222222222222222222222222222222222222222",
+      ])
+    );
+    document.documentElement.setAttribute(
+      "data-e2e-outcomes",
+      JSON.stringify(["Yes", "No"])
+    );
+  });
   await page.goto("https://polymarket.com/");
 
   await unlockWallet(page);
@@ -33,10 +46,9 @@ test("validates manual order inputs", async () => {
 
   await page.click("[data-cy=manual-submit]");
   await expect(page.locator("[data-cy=manual-order-error]")).toContainText(
-    "Token ID is required"
+    "Size must be greater than 0"
   );
 
-  await page.fill("[data-cy=manual-token-id]", "token-yes");
   await page.fill("[data-cy=manual-size]", "0");
   await page.click("[data-cy=manual-submit]");
   await expect(page.locator("[data-cy=manual-order-error]")).toContainText(
@@ -44,7 +56,6 @@ test("validates manual order inputs", async () => {
   );
 
   await page.click("[data-cy=manual-order-limit-tab]");
-  await page.fill("[data-cy=manual-token-id]", "token-yes");
   await page.fill("[data-cy=manual-size]", "1");
   await page.click("[data-cy=manual-submit]");
   await expect(page.locator("[data-cy=manual-order-error]")).toContainText(

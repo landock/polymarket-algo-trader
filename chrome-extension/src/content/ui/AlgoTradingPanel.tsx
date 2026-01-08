@@ -13,6 +13,7 @@ import ClobOrdersList from './ClobOrdersList';
 import PositionsList from './PositionsList';
 import LoadingSpinner from './LoadingSpinner';
 import ManualOrderForm from './ManualOrderForm';
+import useMarketContext from '../hooks/useMarketContext';
 import { usePositions } from '../../shared/hooks/usePositions';
 import { getAlgoOrders } from '../../storage/algo-orders';
 import type { AlgoOrder, ExtensionMessage, MessageResponse, CreateLimitOrderRequest, CreateMarketOrderRequest } from '../../shared/types';
@@ -30,6 +31,7 @@ export default function AlgoTradingPanel() {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [showPositions, setShowPositions] = useState(true);
   const [orderFormInitialData, setOrderFormInitialData] = useState<Partial<AlgoOrderFormData> | undefined>(undefined);
+  const marketContext = useMarketContext();
 
   // Fetch positions using the hook (auto-refreshes every 8 seconds)
   // Use proxy address as that's the wallet that executes trades
@@ -306,6 +308,7 @@ export default function AlgoTradingPanel() {
                     <ManualOrderForm
                       onExecuteMarket={handleExecuteMarketOrder}
                       onCreateLimit={handleCreateLimitOrder}
+                      marketContext={marketContext}
                     />
                   </div>
 
