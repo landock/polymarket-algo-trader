@@ -43,3 +43,8 @@ export const MESSAGE_HANDLERS: { [K in MessageType]: Handler<K> } = {
   RESET_RISK_SETTINGS: () => handleResetRiskSettings(),
   GET_DAILY_LOSS: () => handleGetDailyLoss()
 };
+
+export function dispatchMessage(message: ExtensionMessage): Promise<MessageResponse> {
+  const handler = MESSAGE_HANDLERS[message.type] as (msg: ExtensionMessage) => Promise<MessageResponse>;
+  return handler(message);
+}

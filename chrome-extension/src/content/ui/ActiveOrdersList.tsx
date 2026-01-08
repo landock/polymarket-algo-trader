@@ -51,10 +51,10 @@ export default function ActiveOrdersList({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return '#10b981';
-      case 'PAUSED': return '#f59e0b';
+      case 'ACTIVE': return '#7b8f5a';
+      case 'PAUSED': return '#b07a4a';
       case 'COMPLETED': return '#6b7280';
-      case 'CANCELLED': return '#ef4444';
+      case 'CANCELLED': return '#b24b4b';
       default: return '#6b7280';
     }
   };
@@ -104,7 +104,7 @@ export default function ActiveOrdersList({
           <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
             <div style={{ marginBottom: '4px' }}>
               <span style={{ fontWeight: 500 }}>Side:</span>{' '}
-              <span style={{ color: order.side === 'BUY' ? '#10b981' : '#ef4444' }}>
+              <span style={{ color: order.side === 'BUY' ? '#7b8f5a' : '#b24b4b' }}>
                 {order.side}
               </span>
             </div>
@@ -128,10 +128,11 @@ export default function ActiveOrdersList({
           {order.type === 'TRAILING_STOP' && order.params && 'trailPercent' in order.params && (
             <div style={{
               fontSize: '11px',
-              color: '#667eea',
-              background: '#ede9fe',
+              color: '#8a6a50',
+              background: '#fff9f2',
+              border: '1px solid #e2dbd1',
               padding: '6px 8px',
-              borderRadius: '4px',
+              borderRadius: '6px',
               marginBottom: '8px'
             }}>
               Trail: {order.params.trailPercent}%
@@ -143,10 +144,11 @@ export default function ActiveOrdersList({
           {order.type === 'TWAP' && order.params && 'durationMinutes' in order.params && (
             <div style={{
               fontSize: '11px',
-              color: '#0ea5e9',
-              background: '#e0f2fe',
+              color: '#8a6a50',
+              background: '#fff9f2',
+              border: '1px solid #e2dbd1',
               padding: '6px 8px',
-              borderRadius: '4px',
+              borderRadius: '6px',
               marginBottom: '8px'
             }}>
               Duration: {order.params.durationMinutes}min |
@@ -165,8 +167,8 @@ export default function ActiveOrdersList({
                   padding: '6px',
                   fontSize: '11px',
                   background: 'transparent',
-                  color: '#f59e0b',
-                  border: '1px solid #f59e0b'
+                  color: '#b07a4a',
+                  border: '1px solid #b07a4a'
                 }}
               >
                 Pause
@@ -181,8 +183,8 @@ export default function ActiveOrdersList({
                   padding: '6px',
                   fontSize: '11px',
                   background: 'transparent',
-                  color: '#10b981',
-                  border: '1px solid #10b981'
+                  color: '#7b8f5a',
+                  border: '1px solid #7b8f5a'
                 }}
               >
                 Resume
@@ -197,8 +199,8 @@ export default function ActiveOrdersList({
                   padding: '6px',
                   fontSize: '11px',
                   background: 'transparent',
-                  color: '#ef4444',
-                  border: '1px solid #ef4444'
+                  color: '#b24b4b',
+                  border: '1px solid #b24b4b'
                 }}
               >
                 Cancel

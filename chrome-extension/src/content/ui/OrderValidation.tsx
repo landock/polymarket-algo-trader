@@ -221,15 +221,15 @@ export function formatValidationMessages(result: ValidationResult): React.ReactE
       {result.errors.length > 0 && (
         <div style={{
           padding: '12px',
-          background: '#fee',
-          border: '1px solid #fcc',
+          background: '#f6ecec',
+          border: '1px solid #e5c6c6',
           borderRadius: '6px',
           marginBottom: result.warnings.length > 0 ? '8px' : '0'
         }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#c33', marginBottom: '8px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#8b3a3a', marginBottom: '8px' }}>
             ❌ Errors:
           </div>
-          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#c33' }}>
+          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#8b3a3a' }}>
             {result.errors.map((error, i) => (
               <li key={i} style={{ marginBottom: '4px' }}>{error}</li>
             ))}
@@ -240,14 +240,14 @@ export function formatValidationMessages(result: ValidationResult): React.ReactE
       {result.warnings.length > 0 && (
         <div style={{
           padding: '12px',
-          background: '#fffbea',
-          border: '1px solid #ffd93d',
+          background: '#f6f0e6',
+          border: '1px solid #d7c7ab',
           borderRadius: '6px'
         }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#b45309', marginBottom: '8px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#7a5a3a', marginBottom: '8px' }}>
             ⚠️ Warnings:
           </div>
-          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#92400e' }}>
+          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#7a5a3a' }}>
             {result.warnings.map((warning, i) => (
               <li key={i} style={{ marginBottom: '4px' }}>{warning}</li>
             ))}

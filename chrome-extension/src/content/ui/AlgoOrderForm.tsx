@@ -192,9 +192,9 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
               data-cy="side-buy"
               style={{
                 flex: 1,
-                background: side === 'BUY' ? '#10b981' : 'transparent',
-                color: side === 'BUY' ? 'white' : '#10b981',
-                border: `1px solid #10b981`,
+                background: side === 'BUY' ? '#7b8f5a' : 'transparent',
+                color: side === 'BUY' ? 'white' : '#7b8f5a',
+                border: `1px solid #7b8f5a`,
                 padding: '8px 12px',
                 borderRadius: '6px',
                 fontSize: '13px',
@@ -210,9 +210,9 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
               data-cy="side-sell"
               style={{
                 flex: 1,
-                background: side === 'SELL' ? '#ef4444' : 'transparent',
-                color: side === 'SELL' ? 'white' : '#ef4444',
-                border: `1px solid #ef4444`,
+                background: side === 'SELL' ? '#b24b4b' : 'transparent',
+                color: side === 'SELL' ? 'white' : '#b24b4b',
+                border: `1px solid #b24b4b`,
                 padding: '8px 12px',
                 borderRadius: '6px',
                 fontSize: '13px',
@@ -416,11 +416,11 @@ export default function AlgoOrderForm({ onSubmit, onCancel, initialData }: AlgoO
       <div style={{
         marginTop: '16px',
         padding: '12px',
-        background: '#f0f9ff',
-        border: '1px solid #bae6fd',
-        borderRadius: '6px',
+        background: '#fff9f2',
+        border: '1px solid #e2dbd1',
+        borderRadius: '10px',
         fontSize: '11px',
-        color: '#0369a1'
+        color: '#8a6a50'
       }}>
         <strong>ℹ️ Note:</strong> Algo orders are monitored by the service worker
         and execute automatically when conditions are met.

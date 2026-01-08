@@ -77,7 +77,7 @@ export default function OrderHistoryTable({
               )}
             </div>
             <div>{getOrderTypeLabel(order)}</div>
-            <div className={order.side === 'BUY' ? 'font-semibold text-emerald-600' : 'font-semibold text-red-600'}>
+            <div className={order.side === 'BUY' ? 'font-semibold text-[#7b8f5a]' : 'font-semibold text-[#b24b4b]'}>
               {order.side}
             </div>
             <div className="text-right">{order.size.toFixed(2)}</div>
@@ -93,18 +93,18 @@ export default function OrderHistoryTable({
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                   order.status === 'EXECUTED'
-                    ? 'bg-emerald-100 text-emerald-600'
+                    ? 'bg-[#f1f2e6] text-[#7b8f5a]'
                     : order.status === 'FAILED'
-                      ? 'bg-red-100 text-red-600'
-                      : order.status === 'CANCELLED'
+                    ? 'bg-[#f6ecec] text-[#8b3a3a]'
+                    : order.status === 'CANCELLED'
                         ? 'bg-[#efe9e1] text-[#6b7a86]'
-                        : 'bg-amber-100 text-amber-600'
+                        : 'bg-[#f6f0e6] text-[#7a5a3a]'
                 }`}
               >
                 {order.status}
               </span>
               {order.error && (
-                <div className="mt-0.5 text-xs text-red-600" title={order.error}>
+                <div className="mt-0.5 text-xs text-[#8b3a3a]" title={order.error}>
                   Error
                 </div>
               )}

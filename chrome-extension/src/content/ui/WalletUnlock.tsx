@@ -127,12 +127,12 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
           {error && (
             <div style={{
               padding: '8px 12px',
-              background: '#fee',
-              border: '1px solid #fcc',
+              background: '#f6ecec',
+              border: '1px solid #e5c6c6',
               borderRadius: '6px',
               marginBottom: '12px',
               fontSize: '13px',
-              color: '#c33'
+              color: '#8b3a3a'
             }} data-cy="wallet-error">
               {error}
             </div>
@@ -155,8 +155,8 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
               style={{
                 width: '100%',
                 background: 'transparent',
-                color: '#667eea',
-                border: '1px solid #667eea'
+                color: '#8a6a50',
+                border: '1px solid #e2dbd1'
               }}
             >
               Back to Unlock
@@ -167,11 +167,11 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
         <div style={{
           marginTop: '16px',
           padding: '12px',
-          background: '#fffbea',
-          border: '1px solid #ffd93d',
+          background: '#f6f0e6',
+          border: '1px solid #d7c7ab',
           borderRadius: '6px',
           fontSize: '11px',
-          color: '#886'
+          color: '#7a5a3a'
         }}>
           <strong>⚠️ Security Warning:</strong> Never share your private key with anyone.
           This extension stores it encrypted locally on your device.
@@ -208,12 +208,12 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
         {error && (
           <div style={{
             padding: '8px 12px',
-            background: '#fee',
-            border: '1px solid #fcc',
+            background: '#f6ecec',
+            border: '1px solid #e5c6c6',
             borderRadius: '6px',
             marginBottom: '12px',
             fontSize: '13px',
-            color: '#c33'
+            color: '#8b3a3a'
           }} data-cy="wallet-error">
             {error}
           </div>
@@ -235,8 +235,8 @@ export default function WalletUnlock({ onUnlocked }: WalletUnlockProps) {
           style={{
             width: '100%',
             background: 'transparent',
-            color: '#667eea',
-            border: '1px solid #667eea',
+            color: '#8a6a50',
+            border: '1px solid #e2dbd1',
             fontSize: '12px'
           }}
         >

@@ -34,13 +34,6 @@ export default function AlgoTradingPanel() {
   // Use proxy address as that's the wallet that executes trades
   const { positions, isLoading: isLoadingPositions, error: positionsError, refresh: refreshPositions } = usePositions(proxyAddress);
 
-  // Load active orders when wallet is unlocked
-  useEffect(() => {
-    if (isUnlocked) {
-      loadActiveOrders();
-    }
-  }, [isUnlocked, loadActiveOrders]);
-
   const loadActiveOrders = useCallback(async () => {
     try {
       const orders = await getAlgoOrders();
@@ -53,6 +46,13 @@ export default function AlgoTradingPanel() {
       console.error('Failed to load orders:', error);
     }
   }, []);
+
+  // Load active orders when wallet is unlocked
+  useEffect(() => {
+    if (isUnlocked) {
+      loadActiveOrders();
+    }
+  }, [isUnlocked, loadActiveOrders]);
 
   // Helper to safely send messages to service worker
   const sendMessage = (message: ExtensionMessage, callback?: (response: any) => void) => {

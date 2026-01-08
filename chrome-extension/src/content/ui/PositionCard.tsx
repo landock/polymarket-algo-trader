@@ -28,7 +28,7 @@ export default function PositionCard({
   const formatShares = (value: number) => value.toFixed(2);
 
   // Determine P&L color
-  const pnlColor = position.cashPnl >= 0 ? '#10b981' : '#ef4444'; // green or red
+  const pnlColor = position.cashPnl >= 0 ? '#7b8f5a' : '#b24b4b'; // warm green or red
 
   return (
     <div
@@ -50,8 +50,8 @@ export default function PositionCard({
             style={{
               display: 'inline-block',
               padding: '2px 8px',
-              background: position.outcome === 'Yes' ? '#dcfce7' : '#fee2e2',
-              color: position.outcome === 'Yes' ? '#15803d' : '#991b1b',
+              background: position.outcome === 'Yes' ? '#f1f2e6' : '#f6ecec',
+              color: position.outcome === 'Yes' ? '#7b8f5a' : '#8b3a3a',
               borderRadius: '4px',
               fontSize: '11px',
               fontWeight: 600,
@@ -64,8 +64,8 @@ export default function PositionCard({
               style={{
                 display: 'inline-block',
                 padding: '2px 8px',
-                background: '#dbeafe',
-                color: '#1e40af',
+                background: '#f6f0e6',
+                color: '#7a5a3a',
                 borderRadius: '4px',
                 fontSize: '11px',
                 fontWeight: 600,
@@ -134,7 +134,7 @@ export default function PositionCard({
       <div
         style={{
           padding: '8px',
-          background: position.cashPnl >= 0 ? '#dcfce7' : '#fee2e2',
+          background: position.cashPnl >= 0 ? '#f1f2e6' : '#f6ecec',
           borderRadius: '6px',
           marginBottom: '12px',
         }}
@@ -163,7 +163,7 @@ export default function PositionCard({
             flex: '1 1 calc(50% - 3px)',
             minWidth: '120px',
             padding: '8px 12px',
-            background: '#3b82f6',
+            background: '#1f2a33',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
@@ -171,8 +171,8 @@ export default function PositionCard({
             fontWeight: 600,
             cursor: 'pointer',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#2563eb')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#3b82f6')}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#2a3641')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#1f2a33')}
         >
           📊 Create Order
         </button>
@@ -184,7 +184,7 @@ export default function PositionCard({
             flex: '1 1 calc(50% - 3px)',
             minWidth: '120px',
             padding: '8px 12px',
-            background: '#ef4444',
+            background: '#b24b4b',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
@@ -192,8 +192,8 @@ export default function PositionCard({
             fontWeight: 600,
             cursor: 'pointer',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#dc2626')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = '#ef4444')}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#9e3f3f')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#b24b4b')}
         >
           🚀 Quick Sell
         </button>
@@ -223,21 +223,21 @@ export default function PositionCard({
           <button
             onClick={() => onRedeem(position)}
             data-cy="position-redeem"
-            style={{
-              flex: '1 1 calc(50% - 3px)',
-              minWidth: '120px',
-              padding: '8px 12px',
-              background: '#10b981',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#059669')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#10b981')}
-          >
+          style={{
+            flex: '1 1 calc(50% - 3px)',
+            minWidth: '120px',
+            padding: '8px 12px',
+            background: '#7b8f5a',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#6b7a4c')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#7b8f5a')}
+        >
             💰 Redeem
           </button>
         )}

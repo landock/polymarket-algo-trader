@@ -81,12 +81,12 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
     return (
       <div style={{
         padding: '12px',
-        background: '#f0fdf4',
-        border: '1px solid #86efac',
+        background: '#f1f2e6',
+        border: '1px solid #d7dcc7',
         borderRadius: '6px',
         marginBottom: '12px'
       }}>
-        <div style={{ fontSize: '12px', color: '#15803d', fontWeight: 500, marginBottom: '8px' }}>
+        <div style={{ fontSize: '12px', color: '#7b8f5a', fontWeight: 500, marginBottom: '8px' }}>
           ✓ Builder API Credentials Configured
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -97,8 +97,8 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
               padding: '6px 12px',
               fontSize: '11px',
               background: 'transparent',
-              color: '#15803d',
-              border: '1px solid #86efac'
+              color: '#7b8f5a',
+              border: '1px solid #d7dcc7'
             }}
           >
             Update
@@ -110,8 +110,8 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
               padding: '6px 12px',
               fontSize: '11px',
               background: 'transparent',
-              color: '#dc2626',
-              border: '1px solid #fca5a5'
+              color: '#8b3a3a',
+              border: '1px solid #e5c6c6'
             }}
           >
             Clear
@@ -124,8 +124,8 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
   return (
     <div style={{
       padding: '12px',
-      background: '#fffbea',
-      border: '1px solid #ffd93d',
+      background: '#f6f0e6',
+      border: '1px solid #d7c7ab',
       borderRadius: '6px',
       marginBottom: '12px'
     }}>
@@ -143,7 +143,7 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
             width: '100%',
             padding: '8px',
             fontSize: '12px',
-            background: '#667eea',
+            background: '#1f2a33',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
@@ -199,12 +199,12 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
           {error && (
             <div style={{
               padding: '8px',
-              background: '#fee',
-              border: '1px solid #fcc',
+              background: '#f6ecec',
+              border: '1px solid #e5c6c6',
               borderRadius: '4px',
               marginBottom: '8px',
               fontSize: '11px',
-              color: '#c33'
+              color: '#8b3a3a'
             }}>
               {error}
             </div>
@@ -232,7 +232,7 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
                 flex: 1,
                 padding: '8px',
                 fontSize: '11px',
-                background: '#667eea',
+                background: '#1f2a33',
                 color: 'white',
                 border: 'none',
                 opacity: isSaving ? 0.5 : 1
@@ -247,10 +247,10 @@ export default function BuilderCredentials({ onSaved }: BuilderCredentialsProps)
       <div style={{
         marginTop: '12px',
         padding: '8px',
-        background: '#fff',
+        background: '#fbf9f6',
         borderRadius: '4px',
         fontSize: '10px',
-        color: '#666'
+        color: '#6b7a86'
       }}>
         <strong>ℹ️ Note:</strong> Your credentials are stored locally in the extension and only used to sign API requests.
       </div>

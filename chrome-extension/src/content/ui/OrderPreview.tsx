@@ -95,7 +95,7 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
               <div style={{
                 fontSize: '15px',
                 fontWeight: 600,
-                color: order.side === 'BUY' ? '#10b981' : '#ef4444'
+                color: order.side === 'BUY' ? '#7b8f5a' : '#b24b4b'
               }}>
                 {order.side}
               </div>
@@ -155,26 +155,26 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
           {(order.type === 'STOP_LOSS' || order.type === 'TAKE_PROFIT') && (
             <div style={{
               padding: '12px',
-              background: '#fef3c7',
-              borderRadius: '6px',
+              background: '#f6f0e6',
+              borderRadius: '8px',
               marginTop: '12px'
             }}>
               {order.stopLossPrice && (
                 <>
-                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#7a5a3a', marginBottom: '4px' }}>
                     Stop-Loss Price
                   </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#92400e', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#7a5a3a', marginBottom: '8px' }}>
                     ${order.stopLossPrice.toFixed(4)}
                   </div>
                 </>
               )}
               {order.takeProfitPrice && (
                 <>
-                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#7a5a3a', marginBottom: '4px' }}>
                     Take-Profit Price
                   </div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#92400e' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: '#7a5a3a' }}>
                     ${order.takeProfitPrice.toFixed(4)}
                   </div>
                 </>
@@ -185,30 +185,30 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
           {order.type === 'TWAP' && twapInfo && (
             <div style={{
               padding: '12px',
-              background: '#dbeafe',
-              borderRadius: '6px',
+              background: '#f6f0e6',
+              borderRadius: '8px',
               marginTop: '12px'
             }}>
-              <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#7a5a3a', marginBottom: '4px' }}>
                 Duration
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e40af', marginBottom: '8px' }}>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: '#7a5a3a', marginBottom: '8px' }}>
                 {order.durationMinutes} minutes
               </div>
 
-              <div style={{ fontSize: '12px', color: '#1e40af', marginBottom: '4px' }}>
+              <div style={{ fontSize: '12px', color: '#7a5a3a', marginBottom: '4px' }}>
                 Interval
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 600, color: '#1e40af', marginBottom: '8px' }}>
+              <div style={{ fontSize: '15px', fontWeight: 600, color: '#7a5a3a', marginBottom: '8px' }}>
                 {order.intervalMinutes} minutes
               </div>
 
               <div style={{
                 marginTop: '12px',
                 paddingTop: '12px',
-                borderTop: '1px solid #93c5fd',
+                borderTop: '1px solid #d7c7ab',
                 fontSize: '12px',
-                color: '#1e3a8a'
+                color: '#7a5a3a'
               }}>
                 Will execute <strong>{twapInfo.slices} slices</strong> of{' '}
                 <strong>{twapInfo.sliceSize.toFixed(2)} shares</strong> each
@@ -220,12 +220,12 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
         {/* Warning Box */}
         <div style={{
           padding: '12px',
-          background: '#fffbea',
-          border: '1px solid #fcd34d',
-          borderRadius: '6px',
+          background: '#f6f0e6',
+          border: '1px solid #d7c7ab',
+          borderRadius: '8px',
           marginBottom: '16px',
           fontSize: '12px',
-          color: '#92400e'
+          color: '#7a5a3a'
         }}>
           <strong>⚠️ Important:</strong> This order will be monitored and executed automatically
           when conditions are met. Make sure your parameters are correct.
@@ -256,7 +256,7 @@ export default function OrderPreview({ order, onConfirm, onCancel }: OrderPrevie
             style={{
               flex: 1,
               padding: '10px',
-              background: '#667eea',
+              background: '#1f2a33',
               color: 'white',
               border: 'none',
               borderRadius: '6px',

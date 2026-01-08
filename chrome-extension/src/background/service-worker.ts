@@ -13,7 +13,7 @@ import { tickAlgoEngine } from './algo-engine';
 import { testServiceWorkerDependencies } from './dependency-test';
 import { checkPriceAlerts, setupNotificationHandlers } from './alert-monitor';
 import type { ExtensionMessage, MessageResponse } from '../shared/types';
-import { MESSAGE_HANDLERS } from './message-handlers';
+import { dispatchMessage } from './message-handlers';
 
 // Service worker lifecycle
 chrome.runtime.onInstalled.addListener((details) => {
@@ -48,10 +48,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
   // Wrap async operations in an immediately invoked async function
   (async () => {
     try {
-      const handler = MESSAGE_HANDLERS[message.type];
-      const result = handler
-        ? await handler(message)
-        : { success: false, error: 'Unknown message type' };
+      const result = await dispatchMessage(message);
 
       try {
         sendResponse(result);

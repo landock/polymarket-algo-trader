@@ -105,11 +105,11 @@ export default function ClobOrdersList() {
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'LIVE':
-        return { bg: '#dcfce7', text: '#15803d' };
+        return { bg: '#f1f2e6', text: '#7b8f5a' };
       case 'MATCHED':
-        return { bg: '#dbeafe', text: '#1e40af' };
+        return { bg: '#f6f0e6', text: '#7a5a3a' };
       case 'CANCELLED':
-        return { bg: '#fee2e2', text: '#991b1b' };
+        return { bg: '#f6ecec', text: '#8b3a3a' };
       default:
         return { bg: '#f3f4f6', text: '#6b7280' };
     }
@@ -128,22 +128,22 @@ export default function ClobOrdersList() {
     return (
       <div style={{
         padding: '12px',
-        background: '#fef2f2',
-        border: '1px solid #fecaca',
-        borderRadius: '6px',
+        background: '#f6ecec',
+        border: '1px solid #e5c6c6',
+        borderRadius: '8px',
         marginBottom: '16px'
       }} data-cy="clob-orders-error">
-        <div style={{ fontSize: '13px', color: '#991b1b', marginBottom: '8px' }}>
+        <div style={{ fontSize: '13px', color: '#8b3a3a', marginBottom: '8px' }}>
           ⚠️ {error}
         </div>
         <button
           onClick={loadOrders}
           style={{
             padding: '6px 12px',
-            background: '#ef4444',
+            background: '#b24b4b',
             color: '#ffffff',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             fontSize: '12px',
             fontWeight: 600,
             cursor: 'pointer'
@@ -164,18 +164,18 @@ export default function ClobOrdersList() {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '12px',
-          background: '#f0f9ff',
-          borderRadius: '6px',
+          background: '#fff9f2',
+          borderRadius: '10px',
           cursor: 'pointer',
           marginBottom: isExpanded ? '12px' : 0,
-          border: '1px solid #bae6fd'
+          border: '1px solid #e2dbd1'
         }}
         data-cy="clob-orders-toggle"
       >
-        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0c4a6e' }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#8a6a50', fontFamily: 'IBM Plex Mono, monospace', textTransform: 'uppercase', letterSpacing: '0.2em' }}>
           📋 Real Orders on Exchange ({orders.length})
         </div>
-        <span style={{ fontSize: '16px', color: '#0c4a6e' }}>
+        <span style={{ fontSize: '16px', color: '#6b7a86' }}>
           {isExpanded ? '▼' : '▶'}
         </span>
       </div>
@@ -195,14 +195,14 @@ export default function ClobOrdersList() {
             <div style={{
               padding: '16px',
               textAlign: 'center',
-              border: '2px dashed #e5e7eb',
-              borderRadius: '6px',
-              background: '#f9fafb'
+              border: '2px dashed #e2dbd1',
+              borderRadius: '10px',
+              background: '#fff9f2'
             }} data-cy="clob-orders-empty">
-              <div style={{ fontSize: '13px', color: '#6b7280' }}>
+              <div style={{ fontSize: '13px', color: '#6b7a86' }}>
                 No open orders on the exchange
               </div>
-              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#9aa5b1', marginTop: '4px' }}>
                 Place an order to see it here
               </div>
             </div>
@@ -238,7 +238,7 @@ export default function ClobOrdersList() {
                         <span style={{
                           fontSize: '12px',
                           fontWeight: 600,
-                          color: order.side === 'BUY' ? '#10b981' : '#ef4444'
+                          color: order.side === 'BUY' ? '#7b8f5a' : '#b24b4b'
                         }}>
                           {order.side}
                         </span>
@@ -285,7 +285,7 @@ export default function ClobOrdersList() {
                         <>
                           <div>
                             <div style={{ color: '#6b7280', fontSize: '11px' }}>Filled</div>
-                            <div style={{ fontWeight: 600, color: '#10b981' }}>
+                            <div style={{ fontWeight: 600, color: '#7b8f5a' }}>
                               {formatSize(order.size_matched)} ({percentFilled.toFixed(0)}%)
                             </div>
                           </div>
