@@ -225,15 +225,18 @@ export default function ManualOrderForm({ onExecuteMarket, onCreateLimit }: Manu
         )}
 
         {error && (
-          <div style={{
-            padding: '8px 10px',
-            background: '#f6ecec',
-            border: '1px solid #e5c6c6',
-            borderRadius: '6px',
-            fontSize: '11px',
-            color: '#8b3a3a',
-            marginBottom: '10px'
-          }}>
+          <div
+            data-cy="manual-order-error"
+            style={{
+              padding: '8px 10px',
+              background: '#f6ecec',
+              border: '1px solid #e5c6c6',
+              borderRadius: '6px',
+              fontSize: '11px',
+              color: '#8b3a3a',
+              marginBottom: '10px'
+            }}
+          >
             {error}
           </div>
         )}

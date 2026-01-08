@@ -65,6 +65,10 @@ test("shows unlock prompt when no active trading session", async () => {
 test("shows error when CLOB orders fetch fails", async () => {
   await clearExtensionStorage(context);
   await setE2EOverrides(context, {
+    walletAddresses: {
+      eoaAddress: "0x1111111111111111111111111111111111111111",
+      proxyAddress: "0x2222222222222222222222222222222222222222",
+    },
     clobOrdersError: "CLOB unavailable",
   });
 
@@ -76,4 +80,71 @@ test("shows error when CLOB orders fetch fails", async () => {
   await expect(page.locator("[data-cy=clob-orders-error]")).toContainText(
     "CLOB unavailable"
   );
+});
+
+test("recovers after retrying CLOB orders", async () => {
+  await clearExtensionStorage(context);
+  await setE2EOverrides(context, {
+    walletAddresses: {
+      eoaAddress: "0x1111111111111111111111111111111111111111",
+      proxyAddress: "0x2222222222222222222222222222222222222222",
+    },
+    clobOrdersError: "Temporary error",
+  });
+
+  const page = await context.newPage();
+  await page.goto("https://polymarket.com/");
+
+  await unlockWallet(page);
+  await expect(page.locator("[data-cy=clob-orders-error]")).toBeVisible();
+
+  await setE2EOverrides(context, {
+    walletAddresses: {
+      eoaAddress: "0x1111111111111111111111111111111111111111",
+      proxyAddress: "0x2222222222222222222222222222222222222222",
+    },
+    clobOrders: [
+      {
+        id: "clob-1",
+        status: "LIVE",
+        owner: "0x1111111111111111111111111111111111111111",
+        maker_address: "0x1111111111111111111111111111111111111111",
+        market: "market-1",
+        asset_id: "asset-1",
+        side: "BUY",
+        original_size: "10",
+        size_matched: "2",
+        price: "0.45",
+        outcome: "Yes",
+        created_at: new Date().toISOString(),
+      },
+    ],
+  });
+
+  await page.locator("[data-cy=clob-orders-error] button").click();
+  await expect(page.locator("[data-cy=clob-orders-list]")).toBeVisible();
+});
+
+test("shows context invalidated banner and reload prompt", async () => {
+  await clearExtensionStorage(context);
+  await setE2EOverrides(context, {
+    walletAddresses: {
+      eoaAddress: "0x1111111111111111111111111111111111111111",
+      proxyAddress: "0x2222222222222222222222222222222222222222",
+    },
+  });
+
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    document.documentElement.setAttribute(
+      "data-e2e-context-invalidated",
+      "1"
+    );
+  });
+  await page.goto("https://polymarket.com/");
+
+  await unlockWallet(page);
+  await expect(
+    page.locator("[data-cy=clob-orders-context-invalidated]")
+  ).toBeVisible();
 });

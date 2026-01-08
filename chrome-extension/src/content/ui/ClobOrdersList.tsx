@@ -54,7 +54,22 @@ export default function ClobOrdersList() {
     }
   };
 
+  const isE2EContextInvalidated = () =>
+    document?.documentElement?.getAttribute('data-e2e-context-invalidated') === '1';
+
   const loadOrders = async () => {
+    if (isE2EContextInvalidated()) {
+      setError('Extension was reloaded. Please refresh this page.');
+      setContextInvalidated(true);
+      scheduleAutoReload();
+      setIsLoading(false);
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
     // Check if extension context is still valid
     if (!chrome?.runtime?.sendMessage) {
       console.error('[ClobOrdersList] Extension context invalidated');
