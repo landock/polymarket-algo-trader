@@ -67,6 +67,14 @@ const getE2EMarketContext = (): MarketContext | null => {
   };
 };
 
+const normalizeOutcomeLabel = (label: string) => {
+  const normalized = label.trim();
+  const lower = normalized.toLowerCase();
+  if (lower === 'up') return 'Yes';
+  if (lower === 'down') return 'No';
+  return normalized;
+};
+
 const findMarketCandidate = (root: unknown): { tokenIds: string[]; outcomes?: string[]; question?: string } | null => {
   const stack: unknown[] = [root];
 
@@ -89,7 +97,9 @@ const findMarketCandidate = (root: unknown): { tokenIds: string[]; outcomes?: st
       const tokenIds = parseJsonArray(tokenIdsRaw);
       if (tokenIds.length > 0) {
         const outcomesRaw = node.outcomes ?? node.outcomeNames;
-        const outcomes = outcomesRaw ? parseJsonArray(outcomesRaw) : undefined;
+        const outcomes = outcomesRaw
+          ? parseJsonArray(outcomesRaw).map((label) => normalizeOutcomeLabel(label))
+          : undefined;
         const question =
           (typeof node.question === 'string' && node.question) ||
           (typeof node.title === 'string' && node.title) ||
