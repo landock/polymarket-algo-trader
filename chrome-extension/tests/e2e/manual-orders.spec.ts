@@ -43,6 +43,11 @@ test("validates manual order inputs", async () => {
 
   await unlockWallet(page);
   await expect(page.locator("[data-cy=manual-order-form]")).toBeVisible();
+  await expect(page.locator("[data-cy=manual-side-buy-tab]")).toBeVisible();
+  await expect(page.locator("[data-cy=manual-order-type]")).toHaveValue(
+    "MARKET"
+  );
+  await expect(page.getByText(/Balance \\$/)).toBeVisible();
 
   await page.click("[data-cy=manual-submit]");
   await expect(page.locator("[data-cy=manual-order-error]")).toContainText(
