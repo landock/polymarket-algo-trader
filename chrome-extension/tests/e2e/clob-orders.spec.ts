@@ -136,10 +136,7 @@ test("shows context invalidated banner and reload prompt", async () => {
 
   const page = await context.newPage();
   await page.addInitScript(() => {
-    document.documentElement.setAttribute(
-      "data-e2e-context-invalidated",
-      "1"
-    );
+    (window as any).__E2E_CONTEXT_INVALIDATED__ = true;
   });
   await page.goto("https://polymarket.com/");
 

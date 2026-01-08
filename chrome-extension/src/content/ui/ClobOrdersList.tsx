@@ -18,6 +18,7 @@ export default function ClobOrdersList() {
   const reloadTimeoutRef = React.useRef<number | null>(null);
 
   const isE2EContextInvalidated = () =>
+    (window as any).__E2E_CONTEXT_INVALIDATED__ === true ||
     document?.documentElement?.getAttribute('data-e2e-context-invalidated') === '1';
 
   useEffect(() => {
