@@ -1,10 +1,28 @@
+import fs from "fs";
+import os from "os";
 import path from "path";
-import { chromium, type BrowserContext, type Page } from "@playwright/test";
+import {
+  chromium,
+  type BrowserContext,
+  type Page,
+  type Worker,
+} from "@playwright/test";
 
 const extensionPath = path.resolve(__dirname, "..", "..", "build");
+const serviceWorkerTimeoutMs = Number(
+  process.env.PW_SW_TIMEOUT_MS ?? "15000"
+);
 
 export async function launchExtensionContext(): Promise<BrowserContext> {
-  return chromium.launchPersistentContext("", {
+  if (!fs.existsSync(extensionPath)) {
+    throw new Error(
+      `Extension build not found at ${extensionPath}. Run "bun run build" from chrome-extension.`
+    );
+  }
+
+  const userDataDir = path.join(os.tmpdir(), `pw-ext-${Date.now()}`);
+  return chromium.launchPersistentContext(userDataDir, {
+    timeout: 30_000,
     headless: process.env.HEADLESS === "1",
     args: [
       `--disable-extensions-except=${extensionPath}`,
@@ -13,12 +31,31 @@ export async function launchExtensionContext(): Promise<BrowserContext> {
   });
 }
 
+async function waitForServiceWorker(
+  context: BrowserContext
+): Promise<Worker> {
+  const existing = context.serviceWorkers()[0];
+  if (existing) {
+    return existing;
+  }
+
+  try {
+    return await context.waitForEvent("serviceworker", {
+      timeout: serviceWorkerTimeoutMs,
+    });
+  } catch (error) {
+    throw new Error(
+      `Timed out waiting for extension service worker. Ensure Chromium launches and the extension builds. (${String(
+        error
+      )})`
+    );
+  }
+}
+
 export async function getExtensionId(
   context: BrowserContext
 ): Promise<string> {
-  const worker =
-    context.serviceWorkers()[0] ||
-    (await context.waitForEvent("serviceworker"));
+  const worker = await waitForServiceWorker(context);
   const url = worker.url();
   return url.split("/")[2];
 }
@@ -36,9 +73,7 @@ export async function openExtensionPage(
 export async function clearExtensionStorage(
   context: BrowserContext
 ): Promise<void> {
-  const worker =
-    context.serviceWorkers()[0] ||
-    (await context.waitForEvent("serviceworker"));
+  const worker = await waitForServiceWorker(context);
   await worker.evaluate(() => chrome.storage.local.clear());
 }
 
@@ -46,9 +81,7 @@ export async function setExtensionStorage(
   context: BrowserContext,
   value: Record<string, unknown>
 ): Promise<void> {
-  const worker =
-    context.serviceWorkers()[0] ||
-    (await context.waitForEvent("serviceworker"));
+  const worker = await waitForServiceWorker(context);
   await worker.evaluate((data) => chrome.storage.local.set(data), value);
 }
 
