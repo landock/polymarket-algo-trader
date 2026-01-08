@@ -24,7 +24,6 @@ export default function ClobOrdersList() {
     if (isE2EContextInvalidated()) {
       setError('Extension was reloaded. Please refresh this page.');
       setContextInvalidated(true);
-      scheduleAutoReload();
       return;
     }
 
@@ -68,7 +67,6 @@ export default function ClobOrdersList() {
     if (isE2EContextInvalidated()) {
       setError('Extension was reloaded. Please refresh this page.');
       setContextInvalidated(true);
-      scheduleAutoReload();
       setIsLoading(false);
       if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
