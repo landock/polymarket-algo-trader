@@ -6,6 +6,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './tailwind.css';
 import QueryProvider from '../shared/providers/QueryProvider';
 import WalletProvider from '../shared/providers/WalletProvider';
 import TradingProvider from '../shared/providers/TradingProvider';

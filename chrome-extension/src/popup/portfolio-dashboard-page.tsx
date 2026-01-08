@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
+import './tailwind.css';
 import type { PortfolioMetrics, PositionBreakdown } from '../shared/types';
 import type { PolymarketPosition } from '../shared/types/positions';
 

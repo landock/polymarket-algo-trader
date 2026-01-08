@@ -6,7 +6,9 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import OrderHistory from '../content/ui/OrderHistory';
+import './tailwind.css';
+
+const OrderHistory = React.lazy(() => import('../content/ui/OrderHistory'));
 
 function OrderHistoryPage() {
   return (
@@ -37,7 +39,9 @@ function OrderHistoryPage() {
         </p>
       </div>
 
-      <OrderHistory />
+      <React.Suspense fallback={<div>Loading order history...</div>}>
+        <OrderHistory />
+      </React.Suspense>
     </div>
   );
 }
@@ -45,5 +49,9 @@ function OrderHistoryPage() {
 // Render page
 const root = document.getElementById('root');
 if (root) {
-  ReactDOM.createRoot(root).render(<OrderHistoryPage />);
+  ReactDOM.createRoot(root).render(
+    <React.StrictMode>
+      <OrderHistoryPage />
+    </React.StrictMode>
+  );
 }
