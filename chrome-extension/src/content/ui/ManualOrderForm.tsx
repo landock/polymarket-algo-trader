@@ -279,8 +279,8 @@ export default function ManualOrderForm({
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#1f2a33' }}>
                 Amount
               </div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                Balance {isBalanceLoading ? '--' : `$${formattedUsdcBalance}`}
+              <div style={{ fontSize: '12px', color: '#6b7280' }} data-cy="balance-display">
+                Balance {isBalanceLoading ? '$--' : `$${formattedUsdcBalance}`}
               </div>
             </div>
             <div style={{ fontSize: '12px', color: '#9ca3af' }}>

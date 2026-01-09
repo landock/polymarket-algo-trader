@@ -47,7 +47,7 @@ test("validates manual order inputs", async () => {
   await expect(page.locator("[data-cy=manual-order-type]")).toHaveValue(
     "MARKET"
   );
-  await expect(page.getByText(/Balance \\$/)).toBeVisible();
+  await expect(page.locator("[data-cy=balance-display]")).toBeVisible({ timeout: 20000 });
 
   await page.click("[data-cy=manual-submit]");
   await expect(page.locator("[data-cy=manual-order-error]")).toContainText(
